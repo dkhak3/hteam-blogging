@@ -16,6 +16,7 @@ import PostItem from "module/post/PostItem";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
+import CategoryPageNoData from "./CategoryPageNoData";
 
 const CategoryPageStyles = styled.header`
   padding: 20px 0;
@@ -111,7 +112,7 @@ const CategoryPage = () => {
     fetchData();
   }, [params.slug]);
 
-  if (postList.length <= 0) return <Loading></Loading>;
+  if (postList.length <= 0) return <CategoryPageNoData></CategoryPageNoData>;
   return (
     <Layout>
       <CategoryPageStyles>

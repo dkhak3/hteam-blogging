@@ -13,8 +13,11 @@ import {
   where,
 } from "firebase/firestore";
 import PostItem from "module/post/PostItem";
+import RequiredAuthPage from "pages/RequiredAuthPage";
+import UnauthorizePage from "pages/UnauthorizePage";
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import UserPageNoData from "./UserPageNoData";
 
 const POTS_PER_PAGE = 8;
 
@@ -83,7 +86,9 @@ const UserPage = () => {
     fetchData();
   }, [params.slug]);
 
-  if (postList.length <= 0) return <Loading></Loading>;
+  if (postList.length <= 0) {
+    return <UserPageNoData></UserPageNoData>;
+  }
   return (
     <Layout>
       <div className="container">

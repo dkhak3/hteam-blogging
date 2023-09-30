@@ -121,8 +121,6 @@ const PostDetailsPage = () => {
   const [love, setLove] = useState(false);
 
   const [comment, setComment] = useState(false);
-  const [shareFacebook, setShareFacebook] = useState(false);
-  const [shareTwitter, setShareTwitter] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -143,11 +141,11 @@ const PostDetailsPage = () => {
   }, [slug]);
 
   if (!slug) return <PageNotFound></PageNotFound>;
-  if (!postInfo.title) return <Loading></Loading>;
   return (
     <PostDetailsPageStyles>
       <Layout>
         <div className="container">
+          {!postInfo ? <Loading></Loading> : ""}
           <div className="post-header">
             <PostImage
               url={postInfo?.image}
@@ -171,10 +169,6 @@ const PostDetailsPage = () => {
               ></PostMeta>
               <div className="flex mt-6 gap-x-6 cursor-pointer">
                 <Actions
-                  shareFacebook={shareFacebook}
-                  setShareFacebook={setShareFacebook}
-                  shareTwitter={shareTwitter}
-                  setShareTwitter={setShareTwitter}
                   bookmark={bookmark}
                   setBookmark={setBookmark}
                   love={love}
@@ -200,19 +194,9 @@ const PostDetailsPage = () => {
   );
 };
 
-function Actions({
-  bookmark,
-  setBookmark,
-  love,
-  setLove,
-  shareFacebook,
-  shareTwitter,
-  postInfo,
-  userInfo,
-}) {
+function Actions({ bookmark, setBookmark, love, setLove, postInfo, userInfo }) {
   const [userId, setUserId] = useState("");
   const urlPost = window.location.href;
-  console.log("url", urlPost);
 
   useEffect(() => {
     if (userInfo) {

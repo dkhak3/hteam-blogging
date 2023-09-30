@@ -164,8 +164,15 @@ const PostPage = () => {
           </div>
           <div className="pt-10"></div>
           <Heading>Tất cả post</Heading>
-          {loadingPage && <Loading></Loading>}
-          {postList.length <= 0 && "Không có bài viết nào"}
+          {loadingPage ? (
+            <Loading></Loading>
+          ) : postList.length <= 0 ? (
+            <div className="text-center mt-10 text-xxl font-semibold text-primary">
+              Data is empty
+            </div>
+          ) : (
+            ""
+          )}
           <div className="grid-layout grid-layout--primary">
             {postList.map((item) => (
               <PostItem key={item.id} data={item}></PostItem>
