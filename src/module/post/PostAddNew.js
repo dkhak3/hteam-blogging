@@ -120,9 +120,7 @@ const PostAddNew = () => {
         ...cloneValues,
         image,
         content,
-        love: 0,
         loveIdUsers: [],
-        comment: 0,
         commentIdUsers: [],
         createdAt: serverTimestamp(),
       });

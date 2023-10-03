@@ -84,7 +84,7 @@ const PostRelated = ({ categoryId = "" }) => {
   if (postList.length <= 0) return null;
 
   return (
-    <div className="post-related">
+    <div className="post-related mb-[80px]">
       <Heading>Bài viết liên quan của {postList[0].category.name}</Heading>
       <div className="grid-layout grid-layout--primary">
         {postList.map((item) => (

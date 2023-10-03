@@ -16,7 +16,7 @@ import PostItem from "module/post/PostItem";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
-import CategoryPageNoData from "./CategoryPageNoData";
+import PageNotFound from "pages/PageNotFound";
 
 const CategoryPageStyles = styled.header`
   padding: 20px 0;
@@ -47,14 +47,17 @@ const CategoryPageStyles = styled.header`
 const POTS_PER_PAGE = 8;
 
 const CategoryPage = () => {
-  const params = useParams();
+  const { slug } = useParams();
   const [postList, setPostList] = useState([]);
   const [lastDoc, setLastDoc] = useState();
   const [total, setTotal] = useState(0);
+  const [loadingPage, setLoadingPage] = useState(false);
+  const [nameCategory, setNameCategory] = useState("");
+
   const handleLoadMorePost = async () => {
     const nextRef = query(
       collection(db, "posts"),
-      where("category.slug", "==", params.slug),
+      where("category.slug", "==", slug),
       where("status", "==", 1),
       startAfter(lastDoc),
       limit(POTS_PER_PAGE)
@@ -79,9 +82,10 @@ const CategoryPage = () => {
   };
   useEffect(() => {
     async function fetchData() {
+      setLoadingPage(true);
       const colRef = query(
         collection(db, "posts"),
-        where("category.slug", "==", params.slug),
+        where("category.slug", "==", slug),
         where("status", "==", 1)
       );
 
@@ -106,25 +110,50 @@ const CategoryPage = () => {
         });
         setPostList(result);
       });
+      setLoadingPage(false);
 
       setLastDoc(lastVisible);
     }
     fetchData();
-  }, [params.slug]);
+  }, [slug]);
 
-  if (postList.length <= 0) return <CategoryPageNoData></CategoryPageNoData>;
+  useEffect(() => {
+    async function fetchData() {
+      const colRef = query(
+        collection(db, "categories"),
+        where("slug", "==", slug),
+        where("status", "==", 1)
+      );
+
+      onSnapshot(colRef, (snapShot) => {
+        snapShot.forEach((doc) => {
+          setNameCategory(doc.data().name);
+        });
+      });
+    }
+    fetchData();
+  }, [slug]);
+
+  if (!slug) return <PageNotFound></PageNotFound>;
   return (
     <Layout>
       <CategoryPageStyles>
         <div className="container">
           <div className="pt-10"></div>
-          <Heading>Danh mục {postList[0].category.name}</Heading>
-          <div className="grid-layout grid-layout--primary">
-            {postList.map((item) => (
-              <PostItem key={item.id} data={item}></PostItem>
-            ))}
-          </div>
-
+          <Heading>Danh mục {postList ? nameCategory : ""}</Heading>
+          {loadingPage ? (
+            <Loading></Loading>
+          ) : postList.length <= 0 ? (
+            <div className="text-center mt-10 text-xxl font-semibold text-primary">
+              Data is empty
+            </div>
+          ) : (
+            <div className="grid-layout grid-layout--primary">
+              {postList.map((item) => (
+                <PostItem key={item.id} data={item}></PostItem>
+              ))}
+            </div>
+          )}
           {total > postList.length && (
             <div className="mt-10 mb-10">
               <Button onClick={handleLoadMorePost} className="mx-auto">

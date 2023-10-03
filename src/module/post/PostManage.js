@@ -30,7 +30,7 @@ const POST_PER_PAGE = 5;
 const PostManage = () => {
   const { userInfo } = useAuth();
   const [postList, setPostList] = useState([]);
-  console.log("postList", postList);
+
   const [filter, setFilter] = useState("");
   const [lastDoc, setLastDoc] = useState();
   const [total, setTotal] = useState(0);
@@ -75,17 +75,11 @@ const PostManage = () => {
     const storage = getStorage();
     const imageRef = ref(storage, "images/" + imageName);
     deleteObject(imageRef)
-      .then(() => {
-        console.log("Remove image successfully");
-      })
-      .catch((error) => {
-        console.log("handleDeleteImage ~ error", error);
-        console.log("Can not delete image");
-      });
+      .then(() => {})
+      .catch((error) => {});
   };
 
   const [userId, setUserId] = useState("");
-  console.log("userId", userId);
 
   useEffect(() => {
     if (userInfo) {

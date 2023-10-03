@@ -48,14 +48,13 @@ const BookmarksPage = () => {
   }, []);
 
   const [userId, setUserId] = useState("");
-  console.log("userId", userId);
 
   useEffect(() => {
     if (userInfo) {
       async function fetchData() {
         const colRef = query(
           collection(db, "users"),
-          where("email", "==", userInfo?.email),
+          where("email", "==", userInfo?.email ? userInfo?.email : ""),
           where("status", "==", 1)
         );
 

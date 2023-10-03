@@ -18,14 +18,21 @@ import { userRole, userStatus } from "utils/constants";
 import { getStorage, ref, uploadBytesResumable } from "firebase/storage";
 
 const schema = yup.object({
-  fullname: yup.string().required("Please enter your fullname"),
+  fullname: yup
+    .string()
+    .required("Please enter your fullname")
+    .min(8, "Your fullname must be at least 8 characters or greater")
+    .max(125, "Your fullname must not exceed 125 characters"),
   email: yup
     .string()
     .email("Please enter valid email address")
-    .required("Please enter your email address"),
+    .required("Please enter your email address")
+    .min(15, "Your email must be at least 15 characters or greater")
+    .max(125, "Your email must not exceed 125 characters"),
   password: yup
     .string()
     .min(8, "Your password must be at least 8 characters or greater")
+    .max(125, "Your password must not exceed 125 characters")
     .required("Please enter your password"),
 });
 

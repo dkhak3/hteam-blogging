@@ -129,16 +129,16 @@ function App() {
                 element={<UserProfile></UserProfile>}
               ></Route>
               <Route
+                path="/manage/bookmarks"
+                element={<BookmarksPage></BookmarksPage>}
+              ></Route>
+              <Route
                 path="/manage/my-posts"
                 element={<PostMyManage></PostMyManage>}
               ></Route>
               <Route
                 path="/manage/update-post"
                 element={<PostUpdate></PostUpdate>}
-              ></Route>
-              <Route
-                path="/manage/bookmarks"
-                element={<BookmarksPage></BookmarksPage>}
               ></Route>
             </Route>
           </Routes>

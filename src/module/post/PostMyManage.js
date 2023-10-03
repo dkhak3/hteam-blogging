@@ -32,6 +32,7 @@ const PostMyManage = () => {
   const [postList, setPostList] = useState([]);
   const [lastDoc, setLastDoc] = useState();
   const [total, setTotal] = useState(0);
+  const [loadingTable, setLoadingTable] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,6 +51,7 @@ const PostMyManage = () => {
         setTotal(snapShot.size);
       });
 
+      setLoadingTable(true);
       onSnapshot(newRef, (snapShot) => {
         let result = [];
 
@@ -63,6 +65,7 @@ const PostMyManage = () => {
       });
 
       setLastDoc(lastVisible);
+      setLoadingTable(false);
     }
     fetchData();
   }, [emailPost]);
@@ -213,7 +216,16 @@ const PostMyManage = () => {
             })}
         </tbody>
       </Table>
-      {!emailPost && <Loading></Loading>}
+
+      {loadingTable ? (
+        <Loading></Loading>
+      ) : postList.length <= 0 ? (
+        <div className="text-center mt-10 text-xxl font-semibold text-primary">
+          Data is empty
+        </div>
+      ) : (
+        ""
+      )}
       {total > postList.length && (
         <div className="mt-10 text-center">
           <Button className="mx-auto w-[200px]" onClick={handleLoadMorePost}>
