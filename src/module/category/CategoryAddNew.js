@@ -35,7 +35,7 @@ const CategoryAddNew = () => {
     defaultValues: {
       name: "",
       slug: "",
-      status: 1,
+      status: categoryStatus.APPROVED,
       createdAt: new Date(),
     },
   });

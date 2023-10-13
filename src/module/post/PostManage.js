@@ -30,7 +30,6 @@ const POST_PER_PAGE = 5;
 const PostManage = () => {
   const { userInfo } = useAuth();
   const [postList, setPostList] = useState([]);
-
   const [filter, setFilter] = useState("");
   const [lastDoc, setLastDoc] = useState();
   const [total, setTotal] = useState(0);
@@ -86,8 +85,8 @@ const PostManage = () => {
       async function fetchData() {
         const colRef = query(
           collection(db, "users"),
-          where("email", "==", userInfo?.email),
-          where("status", "==", 1)
+          where("email", "==", userInfo?.email || ""),
+          where("status", "==", postStatus.APPROVED)
         );
 
         onSnapshot(colRef, (snapShot) => {

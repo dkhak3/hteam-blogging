@@ -4,6 +4,7 @@ import PostMeta from "./PostMeta";
 import PostTitle from "./PostTitle";
 import React from "react";
 import styled from "styled-components";
+import PostShortContent from "./PostShortContent";
 
 const PostFeatureItemStyles = styled.div`
   width: 100%;
@@ -77,6 +78,8 @@ const PostFeatureItem = ({ data }) => {
         <PostTitle to={data.slug} size="big">
           {data.title}
         </PostTitle>
+
+        <div className="mt-[16px]">{data?.shortContent}</div>
       </div>
     </PostFeatureItemStyles>
   );

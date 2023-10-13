@@ -4,6 +4,7 @@ import PostCategory from "./PostCategory";
 import PostImage from "./PostImage";
 import PostMeta from "./PostMeta";
 import PostTitle from "./PostTitle";
+import PostShortContent from "./PostShortContent";
 const PostNewestLargeStyles = styled.div`
   .post {
     &-image {
@@ -53,6 +54,11 @@ const PostNewestLarge = ({ data }) => {
         date={formatDate}
         to={data?.user?.username}
       ></PostMeta>
+      <div className="mt-[20px]">
+        <PostShortContent
+          dataShortContent={data?.shortContent}
+        ></PostShortContent>
+      </div>
     </PostNewestLargeStyles>
   );
 };

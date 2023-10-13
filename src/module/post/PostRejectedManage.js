@@ -3,7 +3,6 @@ import {
   ActionEdit,
   ActionTick,
   ActionView,
-  ActionXMark,
 } from "components/action";
 import Loading from "components/common/Loading";
 import { LabelStatus } from "components/label";
@@ -27,7 +26,7 @@ import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { postStatus } from "utils/constants";
 
-const PostPendingManage = () => {
+const PostRejectedManage = () => {
   const { userInfo } = useAuth();
   const [postList, setPostList] = useState([]);
   const [userId, setUserId] = useState("");
@@ -38,7 +37,7 @@ const PostPendingManage = () => {
     async function fetchData() {
       const colRef = query(
         collection(db, "posts"),
-        where("status", "==", postStatus.PENDING)
+        where("status", "==", postStatus.REJECTED)
       );
 
       setLoadngTable(true);
@@ -130,14 +129,6 @@ const PostPendingManage = () => {
     toast.success("Post public successfully!");
   };
 
-  const handleRejectedPost = async (postId) => {
-    const docRef = doc(db, "posts", postId);
-    await updateDoc(docRef, {
-      status: postStatus.REJECTED,
-    });
-    toast.success("Post rejected successfully!");
-  };
-
   return (
     <div>
       <DashboardHeading
@@ -205,9 +196,7 @@ const PostPendingManage = () => {
                       <ActionTick
                         onClick={() => handleTickPost(post.id)}
                       ></ActionTick>
-                      <ActionXMark
-                        onClick={() => handleRejectedPost(post.id)}
-                      ></ActionXMark>
+
                       <ActionDelete
                         onClick={() => handleDeletePost(post)}
                       ></ActionDelete>
@@ -231,4 +220,4 @@ const PostPendingManage = () => {
   );
 };
 
-export default PostPendingManage;
+export default PostRejectedManage;

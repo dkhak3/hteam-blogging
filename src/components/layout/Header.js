@@ -1,5 +1,6 @@
 import { Button } from "components/button";
 import { useAuth } from "contexts/auth-context";
+import useReadingProgress from "hooks/useReadingProgress";
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import styled from "styled-components";
@@ -20,6 +21,7 @@ const menuLinks = [
 ];
 
 const HeaderStyles = styled.header`
+  z-index: 9999;
   padding: 5px 0;
   background-color: #fff;
   .header-main {
@@ -91,12 +93,13 @@ const HeaderStyles = styled.header`
 const Header = () => {
   const { userInfo } = useAuth();
   const [open, setOpen] = useState(false);
+  const completion = useReadingProgress();
 
   const handleToggleMenu = () => {
     setOpen(!open);
   };
   return (
-    <HeaderStyles>
+    <HeaderStyles className="sticky top-0">
       <div className="container">
         <div className="header-main">
           <NavLink to="/">
@@ -231,6 +234,10 @@ const Header = () => {
           ""
         )}
       </div>
+      <span
+        style={{ transform: `translateX(${completion - 100}%)` }}
+        className="absolute bg-primary h-1 w-full bottom-0"
+      ></span>
     </HeaderStyles>
   );
 };

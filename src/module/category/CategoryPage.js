@@ -17,6 +17,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import PageNotFound from "pages/PageNotFound";
+import { categoryStatus, postStatus } from "utils/constants";
 
 const CategoryPageStyles = styled.header`
   padding: 20px 0;
@@ -53,12 +54,14 @@ const CategoryPage = () => {
   const [total, setTotal] = useState(0);
   const [loadingPage, setLoadingPage] = useState(false);
   const [nameCategory, setNameCategory] = useState("");
+  console.log("nameCategory", nameCategory);
 
   const handleLoadMorePost = async () => {
     const nextRef = query(
       collection(db, "posts"),
       where("category.slug", "==", slug),
-      where("status", "==", 1),
+      where("category.status", "==", categoryStatus.APPROVED),
+      where("status", "==", postStatus.APPROVED),
       startAfter(lastDoc),
       limit(POTS_PER_PAGE)
     );
@@ -86,7 +89,8 @@ const CategoryPage = () => {
       const colRef = query(
         collection(db, "posts"),
         where("category.slug", "==", slug),
-        where("status", "==", 1)
+        where("category.status", "==", categoryStatus.APPROVED),
+        where("status", "==", postStatus.APPROVED)
       );
 
       const newRef = query(colRef, limit(POTS_PER_PAGE));
@@ -122,7 +126,7 @@ const CategoryPage = () => {
       const colRef = query(
         collection(db, "categories"),
         where("slug", "==", slug),
-        where("status", "==", 1)
+        where("status", "==", categoryStatus.APPROVED)
       );
 
       onSnapshot(colRef, (snapShot) => {

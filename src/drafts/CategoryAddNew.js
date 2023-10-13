@@ -8,11 +8,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 
 const CategoryAddNew = () => {
-  const {
-    control,
-    setValue,
-    formState: { errors, isSubmitting, isValid },
-  } = useForm({
+  const { control } = useForm({
     mode: "onChange",
   });
   return (

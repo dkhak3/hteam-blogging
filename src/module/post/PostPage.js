@@ -16,6 +16,7 @@ import { debounce } from "lodash";
 import PostItem from "module/post/PostItem";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
+import { postStatus } from "utils/constants";
 
 const PostPageStyles = styled.header`
   padding: 20px 0;
@@ -45,17 +46,23 @@ const PostPageStyles = styled.header`
 `;
 
 const POTS_PER_PAGE = 8;
+// const POTS_PER_PAGE = 2;
 
 const PostPage = () => {
   const [postList, setPostList] = useState([]);
+
   const [filter, setFilter] = useState("");
   const [lastDoc, setLastDoc] = useState();
   const [total, setTotal] = useState(0);
+
   const [loadingPage, setLoadingPage] = useState(false);
 
   const handleLoadMorePost = async () => {
+    console.log("postList", postList.length);
+    console.log("total", total);
     const nextRef = query(
       collection(db, "posts"),
+      where("status", "==", postStatus.APPROVED),
       startAfter(lastDoc),
       limit(POTS_PER_PAGE)
     );
@@ -75,6 +82,9 @@ const PostPage = () => {
     const documentSnapshots = await getDocs(nextRef);
     const lastVisible =
       documentSnapshots.docs[documentSnapshots.docs.length - 1];
+    if (typeof lastVisible === "undefined") {
+      setTotal(0);
+    }
     setLastDoc(lastVisible);
   };
 
@@ -88,7 +98,11 @@ const PostPage = () => {
             where("title", ">=", filter),
             where("title", "<=", filter + "utf8")
           )
-        : query(colRef, limit(POTS_PER_PAGE));
+        : query(
+            colRef,
+            where("status", "==", postStatus.APPROVED),
+            limit(POTS_PER_PAGE)
+          );
 
       const documentSnapshots = await getDocs(newRef);
       const lastVisible =

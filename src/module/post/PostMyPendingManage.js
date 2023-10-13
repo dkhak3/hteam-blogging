@@ -1,10 +1,4 @@
-import {
-  ActionDelete,
-  ActionEdit,
-  ActionTick,
-  ActionView,
-  ActionXMark,
-} from "components/action";
+import { ActionDelete, ActionEdit, ActionView } from "components/action";
 import Loading from "components/common/Loading";
 import { LabelStatus } from "components/label";
 import { Table } from "components/table";
@@ -23,21 +17,41 @@ import { deleteObject, getStorage, ref } from "firebase/storage";
 import DashboardHeading from "module/dashboard/DashboardHeading";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { postStatus } from "utils/constants";
 
-const PostPendingManage = () => {
+const PostMyPendingManage = () => {
   const { userInfo } = useAuth();
   const [postList, setPostList] = useState([]);
   const [userId, setUserId] = useState("");
   const [loadingTable, setLoadngTable] = useState(false);
   const navigate = useNavigate();
 
+  //   get userId
+  useEffect(() => {
+    if (userInfo) {
+      async function fetchData() {
+        const colRef = query(
+          collection(db, "users"),
+          where("email", "==", userInfo?.email || "")
+        );
+
+        onSnapshot(colRef, (snapShot) => {
+          snapShot.forEach((doc) => {
+            setUserId(doc.id);
+          });
+        });
+      }
+      fetchData();
+    }
+  }, [userInfo]);
+
+  // fetch data
   useEffect(() => {
     async function fetchData() {
       const colRef = query(
         collection(db, "posts"),
+        where("user.id", "==", userId),
         where("status", "==", postStatus.PENDING)
       );
 
@@ -55,7 +69,7 @@ const PostPendingManage = () => {
       setLoadngTable(false);
     }
     fetchData();
-  }, []);
+  }, [userId]);
 
   const handleDeleteImage = (imageName) => {
     const storage = getStorage();
@@ -64,25 +78,6 @@ const PostPendingManage = () => {
       .then(() => {})
       .catch((error) => {});
   };
-
-  //   get userId
-  useEffect(() => {
-    if (userInfo) {
-      async function fetchData() {
-        const colRef = query(
-          collection(db, "users"),
-          where("email", "==", userInfo?.email)
-        );
-
-        onSnapshot(colRef, (snapShot) => {
-          snapShot.forEach((doc) => {
-            setUserId(doc.id);
-          });
-        });
-      }
-      fetchData();
-    }
-  }, [userInfo]);
 
   async function handleDeletePost(post) {
     const docRef = doc(db, "posts", post.id);
@@ -120,22 +115,6 @@ const PostPendingManage = () => {
       default:
         break;
     }
-  };
-
-  const handleTickPost = async (postId) => {
-    const docRef = doc(db, "posts", postId);
-    await updateDoc(docRef, {
-      status: postStatus.APPROVED,
-    });
-    toast.success("Post public successfully!");
-  };
-
-  const handleRejectedPost = async (postId) => {
-    const docRef = doc(db, "posts", postId);
-    await updateDoc(docRef, {
-      status: postStatus.REJECTED,
-    });
-    toast.success("Post rejected successfully!");
   };
 
   return (
@@ -202,12 +181,6 @@ const PostPendingManage = () => {
                           navigate(`/manage/update-post?id=${post.id}`)
                         }
                       ></ActionEdit>
-                      <ActionTick
-                        onClick={() => handleTickPost(post.id)}
-                      ></ActionTick>
-                      <ActionXMark
-                        onClick={() => handleRejectedPost(post.id)}
-                      ></ActionXMark>
                       <ActionDelete
                         onClick={() => handleDeletePost(post)}
                       ></ActionDelete>
@@ -231,4 +204,4 @@ const PostPendingManage = () => {
   );
 };
 
-export default PostPendingManage;
+export default PostMyPendingManage;

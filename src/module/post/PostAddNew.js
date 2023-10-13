@@ -2,7 +2,7 @@ import { Button } from "components/button";
 import { db } from "firebase-app/firebase-config";
 import { Dropdown } from "components/dropdown";
 import { Field, FieldCheckboxes } from "components/field";
-import { Input } from "components/input";
+import { Input, Textarea } from "components/input";
 import { Label } from "components/label";
 import { postStatus, userRole } from "utils/constants";
 import { Radio } from "components/checkbox";
@@ -38,6 +38,14 @@ const schema = yup.object().shape({
     .string()
     .max(100, "Please do not enter more than 100 characters")
     .required("Please enter your title"),
+  shortContent: yup
+    .string()
+    .max(100, "Please do not enter more than 100 characters")
+    .required("Please enter your short content"),
+  content: yup
+    .string()
+    .max(30000, "Please do not enter more than 30000 characters")
+    .required("Please enter your content"),
   slug: yup.string().max(100, "Please do not enter more than 100 characters"),
 });
 
@@ -45,11 +53,12 @@ Quill.register("modules/imageUploader", ImageUploader);
 
 const PostAddNew = () => {
   const { userInfo } = useAuth();
-  const [content, setContent] = useState("");
+  // const [content, setContent] = useState("");
   const categoryDefault = {
-    id: "VuoVTxmDLhPsAweBUFXG",
+    id: "shYPMmrmd2YJSz9shQec",
     name: "Other",
     slug: "other",
+    status: 1,
   };
 
   const {
@@ -71,11 +80,18 @@ const PostAddNew = () => {
       image: "",
       category: categoryDefault,
       user: {},
+      shortContent: "",
       content: "",
     },
   });
+
   const watchStatus = watch("status");
   const watchHot = watch("hot");
+  const watchContent = watch("content");
+
+  const setContent = (editorState) => {
+    setValue("content", editorState);
+  };
 
   const {
     image,
@@ -112,14 +128,17 @@ const PostAddNew = () => {
   const addPostHandler = async (values) => {
     if (!isValid) return;
     try {
+      let slugURL = "";
       const cloneValues = { ...values };
-      cloneValues.slug = slugify(values.slug || values.title, { lower: true });
+      const slug = slugify(values.slug || values.title, { lower: true });
+      slugURL = slug + "-" + Math.floor(Math.random() * 999999);
+      cloneValues.slug = slugURL;
       cloneValues.status = Number(values.status);
       const colRef = collection(db, "posts");
       await addDoc(colRef, {
         ...cloneValues,
         image,
-        content,
+        content: watchContent,
         loveIdUsers: [],
         commentIdUsers: [],
         createdAt: serverTimestamp(),
@@ -133,6 +152,7 @@ const PostAddNew = () => {
         hot: false,
         image: "",
         user: {},
+        shortContent: "",
         content: "",
       });
       handleResetUpload();
@@ -160,7 +180,7 @@ const PostAddNew = () => {
   }, []);
 
   useEffect(() => {
-    document.title = "HTeam Blogging - Add new post";
+    document.title = "Add new post";
   }, []);
 
   const handleClickOption = async (item) => {
@@ -183,14 +203,14 @@ const PostAddNew = () => {
         [{ header: 1 }, { header: 2 }], // custom button values
         [{ list: "ordered" }, { list: "bullet" }],
         [{ header: [1, 2, 3, 4, 5, 6, false] }],
-        ["link", "image"],
+        ["link", "image", "video"],
+        ["code-block"],
       ],
       imageUploader: {
         // imgbbAPI
         upload: async (file) => {
-          console.log("upload: ~ file", file);
           const bodyFormData = new FormData();
-          console.log("upload: ~ bodyFormData", bodyFormData);
+
           bodyFormData.append("image", file);
           const response = await axios({
             method: "post",
@@ -206,6 +226,7 @@ const PostAddNew = () => {
     }),
     []
   );
+
   return (
     <>
       <DashboardHeading title="Add post" desc="Add new post"></DashboardHeading>
@@ -268,6 +289,18 @@ const PostAddNew = () => {
         </div>
         <div className="mb-10">
           <Field>
+            <Label>Short content</Label>
+            <Textarea
+              control={control}
+              placeholder="Enter your short content"
+              name="shortContent"
+              error={errors?.shortContent?.message}
+              className="w-full h-[82px] p-4 rounded-lg border border-collapse"
+            ></Textarea>
+          </Field>
+        </div>
+        <div className="mb-10">
+          <Field>
             <Label>Content</Label>
             <div className="w-full entry-content">
               {/* <ReactQuill
@@ -280,9 +313,14 @@ const PostAddNew = () => {
                 placeholder="Write your content..."
                 modules={modules}
                 theme="snow"
-                value={content}
+                value={watchContent}
                 onChange={setContent}
+                // value={editorContent}
+                // onChange={onEditorStateChange}
               />
+              <p className="text-red-500">
+                {errors?.content ? errors?.content?.message : ""}
+              </p>
             </div>
           </Field>
         </div>

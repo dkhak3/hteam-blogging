@@ -40,6 +40,15 @@ const BookmarksPage = React.lazy(() => import("pages/BookmarksPage"));
 const PostPendingManage = React.lazy(() =>
   import("module/post/PostPendingManage")
 );
+const PostMyPendingManage = React.lazy(() =>
+  import("module/post/PostMyPendingManage")
+);
+const PostRejectedManage = React.lazy(() =>
+  import("module/post/PostRejectedManage")
+);
+const PostMyRejectedManage = React.lazy(() =>
+  import("module/post/PostMyRejectedManage")
+);
 
 function App() {
   return (
@@ -95,7 +104,11 @@ function App() {
                   element={<PostPendingManage></PostPendingManage>}
                 ></Route>
                 <Route
-                  path="/manage/category"
+                  path="/manage/rejected-posts"
+                  element={<PostRejectedManage></PostRejectedManage>}
+                ></Route>
+                <Route
+                  path="/manage/categories"
                   element={<CategoryManage></CategoryManage>}
                 ></Route>
                 <Route
@@ -111,7 +124,7 @@ function App() {
                   element={<UserAddNew></UserAddNew>}
                 ></Route>
                 <Route
-                  path="/manage/user"
+                  path="/manage/users"
                   element={<UserManage></UserManage>}
                 ></Route>
                 <Route
@@ -135,6 +148,14 @@ function App() {
               <Route
                 path="/manage/my-posts"
                 element={<PostMyManage></PostMyManage>}
+              ></Route>
+              <Route
+                path="/manage/my-pending-posts"
+                element={<PostMyPendingManage></PostMyPendingManage>}
+              ></Route>
+              <Route
+                path="/manage/my-rejected-posts"
+                element={<PostMyRejectedManage></PostMyRejectedManage>}
               ></Route>
               <Route
                 path="/manage/update-post"

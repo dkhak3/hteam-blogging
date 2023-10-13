@@ -89,7 +89,7 @@ const PostDetailsPageStyles = styled.div`
         font-size: 26px;
       }
       &-content {
-        margin: 40px 0;
+        /* margin: 40px 0; */
       }
     }
     .author {
@@ -97,7 +97,7 @@ const PostDetailsPageStyles = styled.div`
       &-image {
         /* width: 100%; */
         width: 100px;
-        height: auto;
+        /* height: auto; */
       }
     }
   }

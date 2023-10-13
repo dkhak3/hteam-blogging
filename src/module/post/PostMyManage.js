@@ -39,7 +39,8 @@ const PostMyManage = () => {
     async function fetchData() {
       const colRef = query(
         collection(db, "posts"),
-        where("user.email", "==", emailPost || "")
+        where("user.email", "==", emailPost || ""),
+        where("status", "==", postStatus.APPROVED)
       );
       const newRef = query(colRef, limit(POST_PER_PAGE));
 

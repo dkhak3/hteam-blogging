@@ -4,6 +4,7 @@ import PostCategory from "./PostCategory";
 import PostImage from "./PostImage";
 import PostMeta from "./PostMeta";
 import PostTitle from "./PostTitle";
+import PostShortContent from "./PostShortContent";
 const PostNewestItemStyles = styled.div`
   display: flex;
   align-items: center;
@@ -11,6 +12,7 @@ const PostNewestItemStyles = styled.div`
   margin-bottom: 28px;
   padding-bottom: 28px;
   border-bottom: 1px solid #ddd;
+  overflow-y: auto;
   &:last-child {
     padding-bottom: 0;
     margin-bottom: 0;
@@ -72,6 +74,9 @@ const PostNewestItem = ({ data }) => {
           authorName={data?.user?.fullname}
           date={formatDate}
         ></PostMeta>
+        <PostShortContent
+          dataShortContent={data?.shortContent}
+        ></PostShortContent>
       </div>
     </PostNewestItemStyles>
   );

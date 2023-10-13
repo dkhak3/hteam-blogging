@@ -13,6 +13,7 @@ import PostNewestLarge from "module/post/PostNewestLarge";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { postStatus } from "utils/constants";
 import { v4 } from "uuid";
 
 const HomeNewestStyles = styled.div`
@@ -46,7 +47,7 @@ const HomeNewest = () => {
     const colRef = collection(db, "posts");
     const queries = query(
       colRef,
-      where("status", "==", 1),
+      where("status", "==", postStatus.APPROVED),
       where("hot", "==", false),
       limit(4)
     );

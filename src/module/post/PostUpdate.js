@@ -3,7 +3,7 @@ import { Radio } from "components/checkbox";
 import { Dropdown } from "components/dropdown";
 import { Field, FieldCheckboxes } from "components/field";
 import ImageUpload from "components/image/ImageUpload";
-import { Input } from "components/input";
+import { Input, Textarea } from "components/input";
 import { Label } from "components/label";
 import Toggle from "components/toggle/Toggle";
 import { db } from "firebase-app/firebase-config";
@@ -31,13 +31,37 @@ import { imgbbAPI } from "config/apiConfig";
 import slugify from "slugify";
 import { useAuth } from "contexts/auth-context";
 import Swal from "sweetalert2";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+
 Quill.register("modules/imageUploader", ImageUploader);
+
+const schema = yup.object().shape({
+  title: yup
+    .string()
+    .max(100, "Please do not enter more than 100 characters")
+    .required("Please enter your title"),
+  shortContent: yup
+    .string()
+    .max(100, "Please do not enter more than 100 characters")
+    .required("Please enter your short content"),
+  content: yup
+    .string()
+    .max(100, "Please do not enter more than 100 characters")
+    .required("Please enter your short content"),
+  slug: yup.string().max(100, "Please do not enter more than 100 characters"),
+});
 
 const PostUpdate = () => {
   const { userInfo } = useAuth();
   const [params] = useSearchParams();
   const postId = params.get("id");
-  const [content, setContent] = useState("");
+  // const [content, setContent] = useState("");
+  const categoryDefault = {
+    id: "VuoVTxmDLhPsAweBUFXG",
+    name: "Other",
+    slug: "other",
+  };
   const {
     handleSubmit,
     control,
@@ -45,9 +69,21 @@ const PostUpdate = () => {
     watch,
     reset,
     getValues,
-    formState: { isValid, isSubmitting },
+    formState: { errors, isValid, isSubmitting },
   } = useForm({
     mode: "onChange",
+    resolver: yupResolver(schema),
+    defaultValues: {
+      title: "",
+      slug: "",
+      status: 2,
+      hot: false,
+      image: "",
+      category: categoryDefault,
+      user: {},
+      shortContent: "",
+      content: "",
+    },
   });
 
   const imageUrl = getValues("image");
@@ -55,10 +91,10 @@ const PostUpdate = () => {
   const { image, setImage, progress, handleSelectImage, handleDeleteImage } =
     useFirebaseImage(setValue, getValues, imageName, deletePostImage);
   async function deletePostImage() {
-    if (userInfo.role !== userRole.ADMIN) {
-      Swal.fire("Failed", "You have no right to do this action", "warning");
-      return;
-    }
+    // if (userInfo.role !== userRole.ADMIN) {
+    //   Swal.fire("Failed", "You have no right to do this action", "warning");
+    //   return;
+    // }
     const colRef = doc(db, "users", postId);
     await updateDoc(colRef, {
       avatar: "",
@@ -78,13 +114,20 @@ const PostUpdate = () => {
       if (docSnapshot.data()) {
         reset(docSnapshot.data());
         setSelectCategory(docSnapshot.data()?.category || "");
-        setContent(docSnapshot.data()?.content || "");
+        // setContent(docSnapshot.data()?.content || "");
+        setValue("content", docSnapshot.data()?.content || "");
       }
     }
     fetchData();
-  }, [postId, reset]);
+  }, [postId, reset, setValue]);
   const [selectCategory, setSelectCategory] = useState("");
   const [categories, setCategories] = useState([]);
+  const watchContent = watch("content");
+
+  const setContent = (editorState) => {
+    console.log("editorState", editorState);
+    setValue("content", editorState);
+  };
   useEffect(() => {
     async function getCategoriesData() {
       const colRef = collection(db, "categories");
@@ -122,7 +165,7 @@ const PostUpdate = () => {
     await updateDoc(docRef, {
       ...values,
       image,
-      content,
+      content: watchContent,
     });
     toast.success("Update post successfully!");
   };
@@ -134,7 +177,8 @@ const PostUpdate = () => {
         [{ header: 1 }, { header: 2 }], // custom button values
         [{ list: "ordered" }, { list: "bullet" }],
         [{ header: [1, 2, 3, 4, 5, 6, false] }],
-        ["link", "image"],
+        ["link", "image", "video"],
+        ["code-block"],
       ],
       imageUploader: {
         // imgbbAPI
@@ -172,7 +216,7 @@ const PostUpdate = () => {
               control={control}
               placeholder="Enter your title"
               name="title"
-              required
+              error={errors?.title?.message}
             ></Input>
           </Field>
           <Field>
@@ -181,6 +225,7 @@ const PostUpdate = () => {
               control={control}
               placeholder="Enter your slug"
               name="slug"
+              error={errors?.slug?.message}
             ></Input>
           </Field>
         </div>
@@ -193,6 +238,7 @@ const PostUpdate = () => {
               className="h-[250px]"
               progress={progress}
               image={image}
+              error={errors?.image?.message}
             ></ImageUpload>
           </Field>
           <Field>
@@ -220,14 +266,29 @@ const PostUpdate = () => {
         </div>
         <div className="mb-10">
           <Field>
+            <Label>Short content</Label>
+            <Textarea
+              control={control}
+              placeholder="Enter your short content"
+              name="shortContent"
+              error={errors?.shortContent?.message}
+              className="w-full h-[82px] p-4 rounded-lg border border-collapse"
+            ></Textarea>
+          </Field>
+        </div>
+        <div className="mb-10">
+          <Field>
             <Label>Content</Label>
             <div className="w-full entry-content">
               <ReactQuill
                 modules={modules}
                 theme="snow"
-                value={content}
+                value={watchContent}
                 onChange={setContent}
               />
+              <p className="text-red-500">
+                {errors?.content ? errors?.content?.message : ""}
+              </p>
             </div>
           </Field>
         </div>

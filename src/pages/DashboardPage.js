@@ -12,6 +12,7 @@ const DashboardPage = () => {
   const [categoryList, setCategoryList] = useState([]);
   const [userList, setUserList] = useState([]);
   const [postPendingList, setPostPendingList] = useState([]);
+  const [postRejectedList, setPostRejectedList] = useState([]);
 
   useEffect(() => {
     // postList
@@ -53,6 +54,7 @@ const DashboardPage = () => {
       setUserList(results);
     });
 
+    // Post pending
     const colRefPendingPost = query(
       collection(db, "posts"),
       where("status", "==", postStatus.PENDING)
@@ -67,6 +69,22 @@ const DashboardPage = () => {
       });
       setPostPendingList(results);
     });
+
+    // Post pending
+    const colRefRejectedPost = query(
+      collection(db, "posts"),
+      where("status", "==", postStatus.REJECTED)
+    );
+    onSnapshot(colRefRejectedPost, (snapshot) => {
+      let results = [];
+      snapshot.forEach((doc) => {
+        results.push({
+          id: doc.id,
+          ...doc.data(),
+        });
+      });
+      setPostRejectedList(results);
+    });
   }, []);
 
   return (
@@ -76,7 +94,10 @@ const DashboardPage = () => {
         desc="Overview dashboard monitor"
       ></DashboardHeading>
       <div className="grid lg:grid-cols-4 grid-cols-2 lg:gap-x-3 gap-x-3 gap-y-3 text-xl font-medium text-[#1DC071]">
-        <div className="bg-[#f1fbf7] rounded-lg h-[255px] flex items-center justify-center gap-x-3">
+        <div
+          className="bg-[#f1fbf7] rounded-lg h-[255px] flex items-center justify-center gap-x-3"
+          title="Posts length"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-7 w-7"
@@ -93,7 +114,10 @@ const DashboardPage = () => {
           </svg>
           <span className="h-[25px]">{postList?.length}</span>
         </div>
-        <div className="bg-[#f1fbf7] rounded-lg h-[255px] flex items-center justify-center gap-x-3">
+        <div
+          className="bg-[#f1fbf7] rounded-lg h-[255px] flex items-center justify-center gap-x-3"
+          title="Categories length"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-7 w-7"
@@ -110,7 +134,10 @@ const DashboardPage = () => {
           </svg>
           <span className="h-[25px]">{categoryList?.length}</span>
         </div>
-        <div className="bg-[#f1fbf7] rounded-lg h-[255px] flex items-center justify-center gap-x-3">
+        <div
+          className="bg-[#f1fbf7] rounded-lg h-[255px] flex items-center justify-center gap-x-3"
+          title="Users length"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-7 w-7"
@@ -127,7 +154,10 @@ const DashboardPage = () => {
           </svg>
           <span className="h-[25px]">{userList?.length}</span>
         </div>
-        <div className="bg-[#f1fbf7] rounded-lg h-[255px] flex items-center justify-center gap-x-3">
+        <div
+          className="bg-[#f1fbf7] rounded-lg h-[255px] flex items-center justify-center gap-x-3"
+          title="Bookmarks length"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -147,7 +177,10 @@ const DashboardPage = () => {
             {userInfo?.bookmarkPostsId ? userInfo?.bookmarkPostsId?.length : 0}
           </span>
         </div>
-        <div className="bg-[#f1fbf7] rounded-lg h-[255px] flex items-center justify-center gap-x-3">
+        <div
+          className="bg-[#f1fbf7] rounded-lg h-[255px] flex items-center justify-center gap-x-3"
+          title="Pending posts length"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -164,6 +197,26 @@ const DashboardPage = () => {
           </svg>
 
           <span className="h-[25px]">{postPendingList?.length}</span>
+        </div>
+        <div
+          className="bg-[#f1fbf7] rounded-lg h-[255px] flex items-center justify-center gap-x-3"
+          title="Rejected posts length"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+            className="w-6 h-6"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+            />
+          </svg>
+          <span className="h-[25px]">{postRejectedList?.length}</span>
         </div>
       </div>
     </div>
