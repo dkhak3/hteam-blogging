@@ -29,7 +29,7 @@ const schema = yup.object({
     .max(200, "Your comment must not exceed 200 characters"),
 });
 
-const CommentPostDetailsPage = ({ postInfo, userInfo }) => {
+const CommentPostDetailsPage = ({ postInfo = {}, userInfo = {} }) => {
   const {
     control,
     handleSubmit,
@@ -81,22 +81,26 @@ const CommentPostDetailsPage = ({ postInfo, userInfo }) => {
 
   const handleAddComment = ({ comment }) => {
     if (!isValid) return;
-    setLoadingButton(true);
-    updateDoc(commentRef, {
-      commentIdUsers: arrayUnion({
-        userId: userByEmail.id,
-        username: userByEmail.username,
-        fullname: userByEmail.fullname,
-        avatar: userByEmail.avatar,
-        comment: comment,
-        createdAt: new Date(),
-        commentId: uuidv4(),
-      }),
-    }).then(() => {
-      toast.success("Comment this post is successfully");
-      reset();
-      setLoadingButton(false);
-    });
+    if (userInfo) {
+      setLoadingButton(true);
+      updateDoc(commentRef, {
+        commentIdUsers: arrayUnion({
+          userId: userByEmail.id,
+          username: userByEmail.username,
+          fullname: userByEmail.fullname,
+          avatar: userByEmail.avatar,
+          comment: comment,
+          createdAt: new Date(),
+          commentId: uuidv4(),
+        }),
+      }).then(() => {
+        toast.success("Comment this post is successfully");
+        reset();
+        setLoadingButton(false);
+      });
+    } else {
+      toast.info("Please login to do it");
+    }
   };
 
   const handleDeleteComment = (comment) => {
@@ -129,6 +133,7 @@ const CommentPostDetailsPage = ({ postInfo, userInfo }) => {
       });
   };
 
+  if (!userInfo) return;
   return (
     <div className="flex justify-center items-center">
       <div className="w-full h-auto px-7 rounded-[12px] bg-white p-4 shadow-md border">
