@@ -106,6 +106,14 @@ const ActionsPostDetailsPage = ({ postInfo = [], userInfo = [] }) => {
     toast.success("Copy link successfully");
   }
 
+  const handleClickComment = () => {
+    if (!userInfo) {
+      toast.info("Please log in to do it");
+    } else {
+      document.body.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  };
+
   return (
     <>
       {/* Love */}
@@ -159,9 +167,7 @@ const ActionsPostDetailsPage = ({ postInfo = [], userInfo = [] }) => {
             strokeWidth="1.5"
             stroke="currentColor"
             className="w-6 h-6"
-            onClick={() =>
-              document.body.scrollIntoView({ behavior: "smooth", block: "end" })
-            }
+            onClick={() => handleClickComment()}
           >
             <path
               strokeLinecap="round"

@@ -50,16 +50,18 @@ const CommentPostDetailsPage = ({ postInfo = {}, userInfo = {} }) => {
   const commentRef = doc(db, "posts", postInfo?.id);
 
   useEffect(() => {
-    comments.forEach((item) => {
-      console.log(item);
-    });
+    comments.forEach((item) => {});
   }, [comments]);
 
   useEffect(() => {
-    const docRef = doc(db, "posts", postInfo?.id);
-    onSnapshot(docRef, (snapshot) => {
-      setComments(snapshot.data().commentIdUsers);
-    });
+    async function fetchData() {
+      const docRef = doc(db, "posts", postInfo?.id);
+      onSnapshot(docRef, (snapshot) => {
+        setComments(snapshot.data().commentIdUsers);
+      });
+    }
+
+    fetchData();
   }, [postInfo?.id]);
 
   useEffect(() => {
@@ -99,24 +101,25 @@ const CommentPostDetailsPage = ({ postInfo = {}, userInfo = {} }) => {
         setLoadingButton(false);
       });
     } else {
-      toast.info("Please login to do it");
+      toast.info("Please log in to do it");
     }
   };
 
   const handleDeleteComment = (comment) => {
-    updateDoc(commentRef, {
-      commentIdUsers: arrayRemove(comment),
-    })
-      .then((e) => {
-        toast.success("Remove comment this post is successfully");
+    if (userInfo) {
+      updateDoc(commentRef, {
+        commentIdUsers: arrayRemove(comment),
       })
-      .catch((error) => {
-        toast.error("Cannot remove comment this post is successfully");
-      });
+        .then((e) => {
+          toast.success("Remove comment this post is successfully");
+        })
+        .catch((error) => {
+          toast.error("Cannot remove comment this post is successfully");
+        });
+    }
   };
 
   const handleEditComment = async (comment) => {
-    console.log("comment", inputValue);
     setInputEdit(false);
     const updateArrayCompany = {
       commentIdUsers: arrayUnion({
@@ -132,8 +135,8 @@ const CommentPostDetailsPage = ({ postInfo = {}, userInfo = {} }) => {
         alert(error.message);
       });
   };
-
   if (!userInfo) return;
+
   return (
     <div className="flex justify-center items-center">
       <div className="w-full h-auto px-7 rounded-[12px] bg-white p-4 shadow-md border">
