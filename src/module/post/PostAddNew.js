@@ -144,6 +144,7 @@ const PostAddNew = () => {
         createdAt: serverTimestamp(),
       });
       toast.success("Create new post successfully!");
+      window.location.reload();
       reset({
         title: "",
         slug: "",

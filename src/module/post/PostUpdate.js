@@ -47,8 +47,8 @@ const schema = yup.object().shape({
     .required("Please enter your short content"),
   content: yup
     .string()
-    .max(100, "Please do not enter more than 100 characters")
-    .required("Please enter your short content"),
+    .max(30000, "Please do not enter more than 30000 characters")
+    .required("Please enter your content"),
   slug: yup.string().max(100, "Please do not enter more than 100 characters"),
 });
 
