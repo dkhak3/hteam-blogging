@@ -13,15 +13,16 @@ import { toast } from "react-toastify";
 const schema = yup.object().shape({
   name: yup
     .string()
-    .max(100, "Please do not enter more than 100 characters")
+    .max(255, "Your name must not exceed 255 characters")
     .required("Please enter your name"),
   email: yup
     .string()
     .email("Please enter valid email address")
-    .required("Please enter your email"),
+    .required("Please enter your email address")
+    .max(255, "Your email must not exceed 255 characters"),
   message: yup
     .string()
-    .max(250, "Please do not enter more than 250 characters")
+    .max(255, "Your message must not exceed 255 characters")
     .required("Please enter your message"),
 });
 
