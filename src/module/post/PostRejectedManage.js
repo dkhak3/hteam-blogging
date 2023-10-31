@@ -4,6 +4,7 @@ import {
   ActionTick,
   ActionView,
 } from "components/action";
+import { Button } from "components/button";
 import Loading from "components/common/Loading";
 import { LabelStatus } from "components/label";
 import { Table } from "components/table";
@@ -25,12 +26,14 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { postStatus } from "utils/constants";
+const POST_PER_PAGE = 5;
 
 const PostRejectedManage = () => {
   const { userInfo } = useAuth();
   const [postList, setPostList] = useState([]);
   const [userId, setUserId] = useState("");
   const [loadingTable, setLoadngTable] = useState(false);
+  const [postPerPage, setPostPerPage] = useState(POST_PER_PAGE);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -128,6 +131,9 @@ const PostRejectedManage = () => {
     });
     toast.success("Post public successfully!");
   };
+  const handleLoadMorePost = () => {
+    setPostPerPage(postPerPage + POST_PER_PAGE);
+  };
 
   return (
     <div>
@@ -148,63 +154,65 @@ const PostRejectedManage = () => {
         </thead>
         <tbody>
           {postList.length > 0 &&
-            postList.map((post) => {
-              const date = post?.createdAt?.seconds
-                ? new Date(post?.createdAt?.seconds * 1000)
-                : new Date();
-              const formatDate = new Date(date).toLocaleDateString("vi-VI");
+            postList
+              .map((post) => {
+                const date = post?.createdAt?.seconds
+                  ? new Date(post?.createdAt?.seconds * 1000)
+                  : new Date();
+                const formatDate = new Date(date).toLocaleDateString("vi-VI");
 
-              return (
-                <tr key={post.id}>
-                  <td title={post?.id}>{post.id?.slice(0, 5) + "..."}</td>
-                  <td className="!pr-[100px]">
-                    <div className="flex items-center gap-x-3">
-                      <img
-                        src={post.image}
-                        alt=""
-                        className="w-[66px] h-[55px] rounded object-cover"
-                      />
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{post.title}</h3>
-                        <time className="text-sm text-gray-500">
-                          Date: {formatDate}
-                        </time>
+                return (
+                  <tr key={post.id}>
+                    <td title={post?.id}>{post.id?.slice(0, 5) + "..."}</td>
+                    <td className="!pr-[100px]">
+                      <div className="flex items-center gap-x-3">
+                        <img
+                          src={post.image}
+                          alt=""
+                          className="w-[66px] h-[55px] rounded object-cover"
+                        />
+                        <div className="flex-1">
+                          <h3 className="font-semibold">{post.title}</h3>
+                          <time className="text-sm text-gray-500">
+                            Date: {formatDate}
+                          </time>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span className="text-gray-500">
-                      {post.category?.name ? post.category?.name : "null"}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="text-gray-500">
-                      {post.user?.username ? post.user?.username : "null"}
-                    </span>
-                  </td>
-                  <td>{renderPostStatus(post.status)}</td>
-                  <td>
-                    <div className="flex items-center text-gray-500 gap-x-3">
-                      <ActionView
-                        onClick={() => navigate(`/${post.slug}`)}
-                      ></ActionView>
-                      <ActionEdit
-                        onClick={() =>
-                          navigate(`/manage/update-post?id=${post.id}`)
-                        }
-                      ></ActionEdit>
-                      <ActionTick
-                        onClick={() => handleTickPost(post.id)}
-                      ></ActionTick>
+                    </td>
+                    <td>
+                      <span className="text-gray-500">
+                        {post.category?.name ? post.category?.name : "null"}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="text-gray-500">
+                        {post.user?.username ? post.user?.username : "null"}
+                      </span>
+                    </td>
+                    <td>{renderPostStatus(post.status)}</td>
+                    <td>
+                      <div className="flex items-center text-gray-500 gap-x-3">
+                        <ActionView
+                          onClick={() => navigate(`/${post.slug}`)}
+                        ></ActionView>
+                        <ActionEdit
+                          onClick={() =>
+                            navigate(`/manage/update-post?id=${post.id}`)
+                          }
+                        ></ActionEdit>
+                        <ActionTick
+                          onClick={() => handleTickPost(post.id)}
+                        ></ActionTick>
 
-                      <ActionDelete
-                        onClick={() => handleDeletePost(post)}
-                      ></ActionDelete>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                        <ActionDelete
+                          onClick={() => handleDeletePost(post)}
+                        ></ActionDelete>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+              .slice(0, postPerPage)}
         </tbody>
       </Table>
       {loadingTable ? (
@@ -215,6 +223,13 @@ const PostRejectedManage = () => {
         </div>
       ) : (
         ""
+      )}{" "}
+      {postPerPage < postList.length && (
+        <div className="mt-10 text-center">
+          <Button className="mx-auto w-[200px]" onClick={handleLoadMorePost}>
+            Load more
+          </Button>
+        </div>
       )}
     </div>
   );
