@@ -17,9 +17,22 @@ import { yupResolver } from "@hookform/resolvers/yup";
 const schema = yup.object({
   name: yup
     .string()
-    .max(100, "Please do not enter more than 100 characters")
-    .required("Please enter your name"),
-  slug: yup.string().max(100, "Please do not enter more than 100 characters"),
+    .required("Please enter your name")
+    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    .test(
+      "noMultipleWhitespace",
+      "Multiple whitespaces are not allowed",
+      (value) => !/\s\s+/.test(value)
+    )
+    .max(100, "Please do not enter more than 100 characters"),
+  slug: yup
+    .string()
+    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    .matches(
+      /^[a-z0-9-]*$/,
+      "Slug must contain only lowercase letters, numbers, and hyphens"
+    )
+    .max(100, "Please do not enter more than 100 characters"),
 });
 
 const CategoryAddNew = () => {
@@ -39,18 +52,22 @@ const CategoryAddNew = () => {
       createdAt: new Date(),
     },
   });
+  console.log("errors", errors);
 
   const handleAddNewCategory = async (values) => {
-    const newValues = { ...values };
-    newValues.slug = slugify(newValues.name || newValues.slug, {
-      lower: true,
-    });
-
-    newValues.status = Number(newValues.status);
+    console.log("values", values);
     if (!isValid) return;
-    const colRef = collection(db, "categories");
 
     try {
+      let slugURL = "";
+      const newValues = { ...values };
+      const slug = slugify(values.slug || values.name, { lower: true });
+      slugURL = slug + "-" + Math.floor(Math.random() * 999999);
+      newValues.slug = slugURL;
+      newValues.status = Number(newValues.status);
+
+      const colRef = collection(db, "categories");
+
       await addDoc(colRef, {
         ...newValues,
         createdAt: serverTimestamp(),

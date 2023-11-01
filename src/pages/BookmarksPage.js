@@ -194,7 +194,7 @@ const BookmarksPage = () => {
       )}
       {postPerPage < postBookmarkList.length && (
         <div className="mt-10 text-center">
-          <Button className="mx-auto w-[200px]" onClick={handleLoadMorePost}>
+          <Button className="mx-auto" onClick={handleLoadMorePost}>
             Load more
           </Button>
         </div>

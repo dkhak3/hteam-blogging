@@ -8,7 +8,7 @@ import { postStatus, userRole } from "utils/constants";
 import { Radio } from "components/checkbox";
 import { toast } from "react-toastify";
 import { useAuth } from "contexts/auth-context";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import ImageUpload from "components/image/ImageUpload";
 import React, { useEffect, useState, useMemo } from "react";
 import slugify from "slugify";
@@ -36,17 +36,42 @@ import { yupResolver } from "@hookform/resolvers/yup";
 const schema = yup.object().shape({
   title: yup
     .string()
-    .max(100, "Please do not enter more than 100 characters")
-    .required("Please enter your title"),
+    .required("Please enter your title")
+    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    .test(
+      "noMultipleWhitespace",
+      "Multiple whitespaces are not allowed",
+      (value) => !/\s\s+/.test(value)
+    )
+    .max(100, "Please do not enter more than 100 characters"),
+  slug: yup
+    .string()
+    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    .matches(
+      /^[a-z0-9-]*$/,
+      "Slug must contain only lowercase letters, numbers, and hyphens"
+    )
+    .max(100, "Please do not enter more than 100 characters"),
   shortContent: yup
     .string()
+    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    .test(
+      "noMultipleWhitespace",
+      "Multiple whitespaces are not allowed",
+      (value) => !/\s\s+/.test(value)
+    )
     .max(100, "Please do not enter more than 100 characters")
     .required("Please enter your short content"),
   content: yup
     .string()
+    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    .test(
+      "noMultipleWhitespace",
+      "Multiple whitespaces are not allowed",
+      (value) => !/\s\s+/.test(value)
+    )
     .max(30000, "Please do not enter more than 30000 characters")
     .required("Please enter your content"),
-  slug: yup.string().max(100, "Please do not enter more than 100 characters"),
 });
 
 Quill.register("modules/imageUploader", ImageUploader);
@@ -267,7 +292,7 @@ const PostAddNew = () => {
           </Field>
           <Field>
             <Label>Category</Label>
-            <Dropdown>
+            <Dropdown name="selectedOption">
               <Dropdown.Select placeholder="Select the category"></Dropdown.Select>
               <Dropdown.List>
                 {categories.length > 0 &&

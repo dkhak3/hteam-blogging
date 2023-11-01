@@ -20,6 +20,16 @@ import { getStorage, ref, uploadBytesResumable } from "firebase/storage";
 const schema = yup.object({
   fullname: yup
     .string()
+    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    .matches(
+      /^\S+(?:\s+\S+)*$/,
+      "Whitespace at the beginning and end is not allowed"
+    )
+    .test(
+      "noMultipleWhitespace",
+      "Multiple whitespaces are not allowed",
+      (value) => !/\s\s+/.test(value)
+    )
     .required("Please enter your fullname")
     .max(255, "Your fullname must not exceed 255 characters"),
   email: yup
@@ -29,6 +39,7 @@ const schema = yup.object({
     .max(255, "Your email must not exceed 255 characters"),
   password: yup
     .string()
+    .matches(/^\S*$/, "Whitespace is not allowed")
     .min(8, "Your password must be at least 8 characters or greater")
     .max(255, "Your password must not exceed 255 characters")
     .required("Please enter your password"),
@@ -61,8 +72,8 @@ const SignUpPage = () => {
         email: values.email,
         password: values.password,
         username: slugify(
-          values.fullname + "-" + Math.floor(Math.random() * 999999),
-          { lower: true }
+          values.fullname + Math.floor(Math.random() * 999999),
+          { replacement: "", trim: true }
         ),
         avatar: myAvatar,
         status: userStatus.ACTIVE,

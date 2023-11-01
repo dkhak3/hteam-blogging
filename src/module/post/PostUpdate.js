@@ -39,17 +39,42 @@ Quill.register("modules/imageUploader", ImageUploader);
 const schema = yup.object().shape({
   title: yup
     .string()
-    .max(100, "Please do not enter more than 100 characters")
-    .required("Please enter your title"),
+    .required("Please enter your title")
+    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    .test(
+      "noMultipleWhitespace",
+      "Multiple whitespaces are not allowed",
+      (value) => !/\s\s+/.test(value)
+    )
+    .max(100, "Please do not enter more than 100 characters"),
+  slug: yup
+    .string()
+    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    .matches(
+      /^[a-z0-9-]*$/,
+      "Slug must contain only lowercase letters, numbers, and hyphens"
+    )
+    .max(100, "Please do not enter more than 100 characters"),
   shortContent: yup
     .string()
+    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    .test(
+      "noMultipleWhitespace",
+      "Multiple whitespaces are not allowed",
+      (value) => !/\s\s+/.test(value)
+    )
     .max(100, "Please do not enter more than 100 characters")
     .required("Please enter your short content"),
   content: yup
     .string()
+    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    .test(
+      "noMultipleWhitespace",
+      "Multiple whitespaces are not allowed",
+      (value) => !/\s\s+/.test(value)
+    )
     .max(30000, "Please do not enter more than 30000 characters")
     .required("Please enter your content"),
-  slug: yup.string().max(100, "Please do not enter more than 100 characters"),
 });
 
 const PostUpdate = () => {

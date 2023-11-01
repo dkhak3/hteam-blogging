@@ -6,7 +6,7 @@ import { Input } from "components/input";
 import { Label } from "components/label";
 import { auth, db } from "firebase-app/firebase-config";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp, where } from "firebase/firestore";
 import useFirebaseImage from "hooks/useFirebaseImage";
 import DashboardHeading from "module/dashboard/DashboardHeading";
 import React from "react";
@@ -17,11 +17,22 @@ import { userRole, userStatus } from "utils/constants";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import InputPasswordToggle from "components/input/InputPasswordToggle";
+import firebase from "firebase/app";
 
 const schema = yup.object({
   fullname: yup
     .string()
     .required("Please enter your fullname")
+    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    .matches(
+      /^\S+(?:\s+\S+)*$/,
+      "Whitespace at the beginning and end is not allowed"
+    )
+    .test(
+      "noMultipleWhitespace",
+      "Multiple whitespaces are not allowed",
+      (value) => !/\s\s+/.test(value)
+    )
     .max(125, "Your fullname must not exceed 125 characters"),
   email: yup
     .string()
@@ -30,6 +41,7 @@ const schema = yup.object({
     .max(125, "Your email must not exceed 125 characters"),
   password: yup
     .string()
+    .matches(/^\S*$/, "Whitespace is not allowed")
     .min(8, "Your password must be at least 8 characters or greater")
     .max(125, "Your password must not exceed 125 characters")
     .required("Please enter your password"),
@@ -81,11 +93,14 @@ const UserAddNew = () => {
         fullname: values.fullname,
         email: values.email,
         password: values.password,
-        username: slugify(values.username || values.fullname, {
-          lower: true,
-          replacement: "",
-          trim: true,
-        }),
+        username: slugify(
+          values.username ||
+            values.fullname + Math.floor(Math.random() * 999999),
+          {
+            replacement: "",
+            trim: true,
+          }
+        ),
         avatar: image ? image : myAvatar,
         status: Number(values.status),
         role: Number(values.role),

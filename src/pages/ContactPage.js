@@ -13,6 +13,16 @@ import { toast } from "react-toastify";
 const schema = yup.object().shape({
   name: yup
     .string()
+    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    .matches(
+      /^\S+(?:\s+\S+)*$/,
+      "Whitespace at the beginning and end is not allowed"
+    )
+    .test(
+      "noMultipleWhitespace",
+      "Multiple whitespaces are not allowed",
+      (value) => !/\s\s+/.test(value)
+    )
     .max(255, "Your name must not exceed 255 characters")
     .required("Please enter your name"),
   email: yup
@@ -22,6 +32,16 @@ const schema = yup.object().shape({
     .max(255, "Your email must not exceed 255 characters"),
   message: yup
     .string()
+    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    .matches(
+      /^\S+(?:\s+\S+)*$/,
+      "Whitespace at the beginning and end is not allowed"
+    )
+    .test(
+      "noMultipleWhitespace",
+      "Multiple whitespaces are not allowed",
+      (value) => !/\s\s+/.test(value)
+    )
     .max(255, "Your message must not exceed 255 characters")
     .required("Please enter your message"),
 });
@@ -1006,19 +1026,3 @@ const ContactPage = () => {
 };
 
 export default ContactPage;
-
-const ContactTextArea = ({ row, placeholder, name, defaultValue }) => {
-  return (
-    <>
-      <div className="mb-6">
-        <textarea
-          rows={row}
-          placeholder={placeholder}
-          name={name}
-          className="border-[#f0f0f0] w-full resize-none rounded border py-3 px-[14px] text-base text-body-color outline-none focus:border-primary focus-visible:shadow-none"
-          defaultValue={defaultValue}
-        />
-      </div>
-    </>
-  );
-};

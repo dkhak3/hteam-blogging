@@ -19,12 +19,23 @@ import Loading from "components/common/Loading";
 const schema = yup.object({
   name: yup
     .string()
-    .max(100, "Please do not enter more than 100 characters")
-    .required("Please enter your name"),
+    .required("Please enter your name")
+    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    .test(
+      "noMultipleWhitespace",
+      "Multiple whitespaces are not allowed",
+      (value) => !/\s\s+/.test(value)
+    )
+    .max(100, "Please do not enter more than 100 characters"),
   slug: yup
     .string()
-    .max(100, "Please do not enter more than 100 characters")
-    .required("Please enter your slug"),
+    .required("Please enter your slug")
+    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    .matches(
+      /^[a-z0-9-]*$/,
+      "Slug must contain only lowercase letters, numbers, and hyphens"
+    )
+    .max(100, "Please do not enter more than 100 characters"),
 });
 
 const CategoryUpdate = () => {
