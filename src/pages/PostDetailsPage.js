@@ -128,58 +128,58 @@ const PostDetailsPage = () => {
   }, [slug]);
 
   if (!slug) return <PageNotFound></PageNotFound>;
-  // if (!postInfo?.user?.id ? <Loading></Loading> : "")
+  if (!postInfo.title) return null;
   return (
     <PostDetailsPageStyles>
       <Layout>
-        {!postInfo?.user?.id ? (
-          <Loading></Loading>
-        ) : (
-          <div className="container">
-            <div className="post-header">
+        <div className="container">
+          <div className="post-header">
+            {postInfo?.image ? (
               <PostImage
                 url={postInfo?.image}
                 className="post-feature"
               ></PostImage>
-              <div className="post-info">
-                <PostCategory className="mb-6" to={postInfo.category?.slug}>
-                  {postInfo?.category?.name}
-                </PostCategory>
-                <h1 className="post-heading">{postInfo?.title}</h1>
-                <PostMeta
-                  authorName={postInfo.user?.fullname}
-                  date={
-                    postInfo?.createdAt?.seconds
-                      ? new Date(
-                          postInfo?.createdAt?.seconds * 1000
-                        ).toLocaleDateString("vi-VI")
-                      : new Date().toLocaleDateString("vi-VI")
-                  }
-                  to={postInfo.user?.username}
-                ></PostMeta>
-                <div className="flex mt-6 gap-x-6 cursor-pointer">
-                  <ActionsPostDetailsPage
-                    postInfo={postInfo}
-                    userInfo={userInfo}
-                  ></ActionsPostDetailsPage>
-                </div>
+            ) : (
+              ""
+            )}
+            <div className="post-info">
+              <PostCategory className="mb-6" to={postInfo.category?.slug}>
+                {postInfo?.category?.name}
+              </PostCategory>
+              <h1 className="post-heading">{postInfo?.title}</h1>
+              <PostMeta
+                authorName={postInfo.user?.fullname}
+                date={
+                  postInfo?.createdAt?.seconds
+                    ? new Date(
+                        postInfo?.createdAt?.seconds * 1000
+                      ).toLocaleDateString("vi-VI")
+                    : new Date().toLocaleDateString("vi-VI")
+                }
+                to={postInfo.user?.username}
+              ></PostMeta>
+              <div className="flex mt-6 gap-x-6 cursor-pointer">
+                <ActionsPostDetailsPage
+                  postInfo={postInfo}
+                  userInfo={userInfo}
+                ></ActionsPostDetailsPage>
               </div>
             </div>
-            <div className="post-content">
-              <div className="entry-content">
-                {parse(postInfo?.content || "")}
-              </div>
-              <AuthorBox
-                userId={postInfo?.user?.id ? postInfo?.user?.id : ""}
-              ></AuthorBox>
-            </div>
-            <PostRelated categoryId={postInfo?.category?.id}></PostRelated>
-            <CommentPostDetailsPage
-              postInfo={postInfo}
-              userInfo={userInfo}
-            ></CommentPostDetailsPage>
           </div>
-        )}
+          <div className="post-content">
+            <div className="entry-content">
+              {parse(postInfo?.content || "")}
+            </div>
+            <AuthorBox
+              userId={postInfo?.user?.id ? postInfo?.user?.id : ""}
+            ></AuthorBox>
+          </div>
+          <PostRelated categoryId={postInfo?.category?.id}></PostRelated>
+          <CommentPostDetailsPage
+            postInfo={postInfo}
+            userInfo={userInfo}
+          ></CommentPostDetailsPage>
+        </div>
       </Layout>
     </PostDetailsPageStyles>
   );

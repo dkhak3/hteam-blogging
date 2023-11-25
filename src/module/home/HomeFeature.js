@@ -4,6 +4,7 @@ import {
   collection,
   limit,
   onSnapshot,
+  orderBy,
   query,
   where,
 } from "firebase/firestore";
@@ -12,6 +13,7 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { Button } from "components/button";
+import { postStatus } from "utils/constants";
 const HomeFeatureStyles = styled.div``;
 
 const HomeFeature = () => {
@@ -22,8 +24,9 @@ const HomeFeature = () => {
     const colRef = collection(db, "posts");
     const queries = query(
       colRef,
-      where("status", "==", 1),
+      where("status", "==", postStatus.APPROVED),
       where("hot", "==", true),
+      orderBy("createdAt", "desc"),
       limit(3)
     );
     onSnapshot(queries, (snapshot) => {

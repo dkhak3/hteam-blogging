@@ -19,14 +19,13 @@ import DashboardHeading from "module/dashboard/DashboardHeading";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { postStatus } from "utils/constants";
-const POST_PER_PAGE = 5;
+import { POST_PER_PAGE_5, postStatus } from "utils/constants";
 const PostMyPendingManage = () => {
   const { userInfo } = useAuth();
   const [postList, setPostList] = useState([]);
   const [userId, setUserId] = useState("");
   const [loadingTable, setLoadngTable] = useState(false);
-  const [postPerPage, setPostPerPage] = useState(POST_PER_PAGE);
+  const [postPerPage, setPostPerPage] = useState(POST_PER_PAGE_5);
   const navigate = useNavigate();
 
   //   get userId
@@ -119,7 +118,7 @@ const PostMyPendingManage = () => {
     }
   };
   const handleLoadMorePost = () => {
-    setPostPerPage(postPerPage + POST_PER_PAGE);
+    setPostPerPage(postPerPage + POST_PER_PAGE_5);
   };
   return (
     <div>
@@ -152,11 +151,15 @@ const PostMyPendingManage = () => {
                     <td title={post?.id}>{post.id?.slice(0, 5) + "..."}</td>
                     <td className="!pr-[100px]">
                       <div className="flex items-center gap-x-3">
-                        <img
-                          src={post.image}
-                          alt=""
-                          className="w-[66px] h-[55px] rounded object-cover"
-                        />
+                        {post.image ? (
+                          <img
+                            src={post.image}
+                            alt=""
+                            className="w-[66px] h-[55px] rounded object-cover"
+                          />
+                        ) : (
+                          ""
+                        )}
                         <div className="flex-1">
                           <h3 className="font-semibold">{post.title}</h3>
                           <time className="text-sm text-gray-500">

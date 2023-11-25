@@ -116,7 +116,7 @@ const FeaturedPostsPage = () => {
       <FeaturedPostsPageStyles>
         <div className="container">
           <div className="pt-10"></div>
-          <Heading>Tất cả featured post</Heading>
+          <Heading>Featured posts</Heading>
           {postList.length <= 0 && <Loading></Loading>}
           <div className="grid-layout grid-layout--primary">
             {postList.map((item) => (

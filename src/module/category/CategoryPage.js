@@ -144,7 +144,7 @@ const CategoryPage = () => {
       <CategoryPageStyles>
         <div className="container">
           <div className="pt-10"></div>
-          <Heading>Danh mục {postList ? nameCategory : ""}</Heading>
+          <Heading>{postList ? nameCategory : ""} category</Heading>
           {loadingPage ? (
             <Loading></Loading>
           ) : postList.length <= 0 ? (

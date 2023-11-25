@@ -3,7 +3,6 @@ import "./styles/index.scss";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { ThemeProvider } from "styled-components";
-import { GlobalStyles } from "./styles/GlobalStyles";
 import { theme } from "./utils/constants";
 import { BrowserRouter } from "react-router-dom";
 import { createRoot } from "react-dom/client";
@@ -16,10 +15,20 @@ const root = createRoot(container);
 root.render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
-      <GlobalStyles></GlobalStyles>
       <BrowserRouter>
         <App />
-        <ToastContainer></ToastContainer>
+        <ToastContainer
+          position="top-center"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        ></ToastContainer>
       </BrowserRouter>
     </ThemeProvider>
   </React.StrictMode>

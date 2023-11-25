@@ -116,7 +116,7 @@ const LatestPostsPage = () => {
       <LatestPostsPageStyles>
         <div className="container">
           <div className="pt-10"></div>
-          <Heading>Tất cả Latest post</Heading>
+          <Heading>Latest posts</Heading>
           {postList.length <= 0 && <Loading></Loading>}
           <div className="grid-layout grid-layout--primary">
             {postList.map((item) => (

@@ -16,47 +16,22 @@ import {
 } from "firebase/firestore";
 import DashboardHeading from "module/dashboard/DashboardHeading";
 import React, { useEffect, useState } from "react";
-import { categoryStatus, userRole } from "utils/constants";
+import { POST_PER_PAGE_5, categoryStatus, userRole } from "utils/constants";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-import { debounce } from "lodash";
+import { debounce, orderBy } from "lodash";
 import { useAuth } from "contexts/auth-context";
 import Loading from "components/common/Loading";
 
-const CATEGORY_PER_PAGE = 5;
-
 const CategoryManage = () => {
   const [categoryList, setCategoryList] = useState([]);
-
   const navigate = useNavigate();
   const [filter, setFilter] = useState("");
-  const [lastDoc, setLastDoc] = useState();
-  const [total, setTotal] = useState(0);
+  const [postPerPage, setPostPerPage] = useState(POST_PER_PAGE_5);
   const [loadingTable, setLoading] = useState(false);
 
   const handleLoadMoreCategory = async () => {
-    const nextRef = query(
-      collection(db, "categories"),
-      startAfter(lastDoc),
-      limit(CATEGORY_PER_PAGE)
-    );
-
-    onSnapshot(nextRef, (snapShot) => {
-      let result = [];
-
-      snapShot.forEach((doc) => {
-        result.push({
-          id: doc.id,
-          ...doc.data(),
-        });
-      });
-      setCategoryList([...categoryList, ...result]);
-    });
-
-    const documentSnapshots = await getDocs(nextRef);
-    const lastVisible =
-      documentSnapshots.docs[documentSnapshots.docs.length - 1];
-    setLastDoc(lastVisible);
+    setPostPerPage(postPerPage + POST_PER_PAGE_5);
   };
 
   useEffect(() => {
@@ -65,18 +40,11 @@ const CategoryManage = () => {
       const newRef = filter
         ? query(
             colRef,
+            where("status", "==", categoryStatus.APPROVED),
             where("name", ">=", filter),
             where("name", "<=", filter + "utf8")
           )
-        : query(colRef, limit(CATEGORY_PER_PAGE));
-
-      const documentSnapshots = await getDocs(newRef);
-      const lastVisible =
-        documentSnapshots.docs[documentSnapshots.docs.length - 1];
-
-      onSnapshot(colRef, (snapShot) => {
-        setTotal(snapShot.size);
-      });
+        : query(colRef, where("status", "==", categoryStatus.APPROVED));
 
       setLoading(true);
       onSnapshot(newRef, (snapShot) => {
@@ -91,8 +59,6 @@ const CategoryManage = () => {
         setCategoryList(result);
       });
       setLoading(false);
-
-      setLastDoc(lastVisible);
     }
     fetchData();
   }, [filter]);
@@ -130,13 +96,15 @@ const CategoryManage = () => {
           Create category
         </Button>
       </DashboardHeading>
-      <div className="mb-10 flex justify-end">
-        <input
-          type="text"
-          placeholder="Search category..."
-          className="px-5 py-4 border border-gray-300 rounded-lg outline-none"
-          onChange={handleInputFilter}
-        />
+      <div className="flex justify-end gap-5 mb-10">
+        <div className="w-full max-w-[300px]">
+          <input
+            type="text"
+            placeholder="Search for category name..."
+            className="w-full p-4 border border-gray-300 border-solid rounded-lg"
+            onChange={handleInputFilter}
+          />
+        </div>
       </div>
       <Table>
         <thead>
@@ -150,38 +118,42 @@ const CategoryManage = () => {
         </thead>
         <tbody>
           {categoryList.length > 0 &&
-            categoryList.map((category) => (
-              <tr key={category.id}>
-                <td>{category.id}</td>
-                <td>{category.name}</td>
-                <td>
-                  <span className="italic text-gray-400">{category.slug}</span>
-                </td>
-                <td>
-                  {Number(category.status) === categoryStatus.APPROVED && (
-                    <LabelStatus type="success">Approved</LabelStatus>
-                  )}
-                  {Number(category.status) === categoryStatus.UNAPPROVED && (
-                    <LabelStatus type="warning">Unapproved</LabelStatus>
-                  )}
-                </td>
-                <td>
-                  <div className="flex items-center gap-x-3">
-                    <ActionView
-                      onClick={() => navigate(`/category/${category.slug}`)}
-                    ></ActionView>
-                    <ActionEdit
-                      onClick={() =>
-                        navigate(`/manage/update-category?id=${category.id}`)
-                      }
-                    ></ActionEdit>
-                    <ActionDelete
-                      onClick={() => handleDeleteCategory(category.id)}
-                    ></ActionDelete>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            categoryList
+              .map((category) => (
+                <tr key={category.id}>
+                  <td>{category.id}</td>
+                  <td>{category.name}</td>
+                  <td>
+                    <span className="italic text-gray-400">
+                      {category.slug}
+                    </span>
+                  </td>
+                  <td>
+                    {Number(category.status) === categoryStatus.APPROVED && (
+                      <LabelStatus type="success">Approved</LabelStatus>
+                    )}
+                    {Number(category.status) === categoryStatus.UNAPPROVED && (
+                      <LabelStatus type="warning">Unapproved</LabelStatus>
+                    )}
+                  </td>
+                  <td>
+                    <div className="flex items-center gap-x-3">
+                      <ActionView
+                        onClick={() => navigate(`/category/${category.slug}`)}
+                      ></ActionView>
+                      <ActionEdit
+                        onClick={() =>
+                          navigate(`/manage/update-category?id=${category.id}`)
+                        }
+                      ></ActionEdit>
+                      <ActionDelete
+                        onClick={() => handleDeleteCategory(category.id)}
+                      ></ActionDelete>
+                    </div>
+                  </td>
+                </tr>
+              ))
+              .slice(0, postPerPage)}
         </tbody>
       </Table>
       {loadingTable ? (
@@ -194,9 +166,9 @@ const CategoryManage = () => {
         ""
       )}
 
-      {total > categoryList.length && (
-        <div className="mt-10">
-          <Button onClick={handleLoadMoreCategory} className="mx-auto">
+      {postPerPage < categoryList.length && (
+        <div className="mt-10 text-center">
+          <Button className="mx-auto" onClick={handleLoadMoreCategory}>
             Load more
           </Button>
         </div>

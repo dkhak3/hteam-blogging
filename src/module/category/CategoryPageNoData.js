@@ -27,7 +27,7 @@ const CategoryPageNoData = ({ slug = "" }) => {
     <Layout>
       <div className="container">
         <div className="pt-10"></div>
-        <Heading>Danh mục {nameCategory}</Heading>
+        <Heading>{nameCategory} category</Heading>
         <div className="text-center mt-10 text-xxl font-semibold text-primary">
           Data is empty
         </div>

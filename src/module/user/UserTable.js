@@ -10,6 +10,7 @@ import {
   getDocs,
   limit,
   onSnapshot,
+  orderBy,
   query,
   startAfter,
   where,
@@ -35,6 +36,8 @@ const UserTable = () => {
   const handleLoadMoreUser = async () => {
     const nextRef = query(
       collection(db, "users"),
+      where("status", "==", userStatus.ACTIVE),
+      orderBy("createdAt", "desc"),
       startAfter(lastDoc),
       limit(USER_PER_PAGE)
     );
@@ -63,10 +66,16 @@ const UserTable = () => {
       const newRef = filter
         ? query(
             colRef,
+            where("status", "==", userStatus.ACTIVE),
             where("fullname", ">=", filter),
             where("fullname", "<=", filter + "utf8")
           )
-        : query(colRef, limit(USER_PER_PAGE));
+        : query(
+            colRef,
+            where("status", "==", userStatus.ACTIVE),
+            orderBy("createdAt", "desc"),
+            limit(USER_PER_PAGE)
+          );
 
       const documentSnapshots = await getDocs(newRef);
       const lastVisible =
@@ -162,13 +171,15 @@ const UserTable = () => {
 
   return (
     <div>
-      <div className="mb-10 flex justify-end">
-        <input
-          type="text"
-          placeholder="Search user..."
-          className="px-5 py-4 border border-gray-300 rounded-lg outline-none"
-          onChange={handleInputFilter}
-        />
+      <div className="flex justify-end gap-5 mb-10">
+        <div className="w-full max-w-[300px]">
+          <input
+            type="text"
+            className="w-full p-4 border border-gray-300 border-solid rounded-lg"
+            placeholder="Search for post name..."
+            onChange={handleInputFilter}
+          />
+        </div>
       </div>
       <Table>
         <thead>

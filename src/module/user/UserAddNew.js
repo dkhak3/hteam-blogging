@@ -17,8 +17,6 @@ import { userRole, userStatus } from "utils/constants";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import InputPasswordToggle from "components/input/InputPasswordToggle";
-import firebase from "firebase/app";
-
 const schema = yup.object({
   fullname: yup
     .string()
@@ -34,6 +32,10 @@ const schema = yup.object({
       (value) => !/\s\s+/.test(value)
     )
     .max(125, "Your fullname must not exceed 125 characters"),
+  username: yup
+    .string()
+    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    .matches(/^[a-z0-9]+(?:[_-][a-z0-9]+)*$/, "Invalid slug format"),
   email: yup
     .string()
     .email("Please enter valid email address")
@@ -90,11 +92,12 @@ const UserAddNew = () => {
         photoURL: image ? image : myAvatar,
       });
       await addDoc(collection(db, "users"), {
+        uid: auth.currentUser.uid,
         fullname: values.fullname,
         email: values.email,
         password: values.password,
         username: slugify(
-          values.username ||
+          values.username + Math.floor(Math.random() * 999999) ||
             values.fullname + Math.floor(Math.random() * 999999),
           {
             replacement: "",
@@ -167,6 +170,7 @@ const UserAddNew = () => {
               name="username"
               placeholder="Enter your username"
               control={control}
+              error={errors?.username?.message}
             ></Input>
           </Field>
         </div>

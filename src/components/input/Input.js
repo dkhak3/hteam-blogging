@@ -59,7 +59,7 @@ const Input = ({
         type={type}
         {...field}
         {...props}
-        className={error ? "!border !border-red-500" : className || ""}
+        className={error ? "!border !border-red-500" : className}
       />
       <span className={`text-sm font-medium text-red-500`}>{error}</span>
       {children ? (

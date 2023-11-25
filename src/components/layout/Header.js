@@ -236,7 +236,7 @@ const Header = () => {
       </div>
       <span
         style={{ transform: `translateX(${completion - 100}%)` }}
-        className="absolute bg-primary h-1 w-full bottom-0"
+        className="absolute bg-primary h-1 w-full bottom-[-4px]"
       ></span>
     </HeaderStyles>
   );

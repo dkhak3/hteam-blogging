@@ -1,80 +1,70 @@
 import { ActionDelete, ActionView } from "components/action";
 import { Button } from "components/button";
-import Loading from "components/common/Loading";
 import { Table } from "components/table";
 import { useAuth } from "contexts/auth-context";
 import { db } from "firebase-app/firebase-config";
 import {
+  arrayRemove,
   collection,
   doc,
   getDocs,
-  limit,
-  onSnapshot,
   query,
-  startAfter,
   updateDoc,
   where,
 } from "firebase/firestore";
+import useGetUserIdByEmail from "hooks/useGetUserIdByEmail";
 import DashboardHeading from "module/dashboard/DashboardHeading";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { postStatus } from "utils/constants";
-const POST_PER_PAGE = 5;
+import { POST_PER_PAGE_5, postStatus } from "utils/constants";
+
 const BookmarksPage = () => {
   const { userInfo } = useAuth();
   const [postList, setPostList] = useState([]);
-  const [postBookmarkList, setPostBookmarkList] = useState([]);
-  console.log("postBookmarkList", postBookmarkList.length);
-  const [loadingTable, setLoadingTable] = useState(false);
-  const [postPerPage, setPostPerPage] = useState(POST_PER_PAGE);
-  console.log("postPerPage", postPerPage);
+  const [postPerPage, setPostPerPage] = useState(POST_PER_PAGE_5);
   const navigate = useNavigate();
 
+  // hook get user id by email
+  const { userId } = useGetUserIdByEmail(userInfo?.email);
+
+  // fetch data
   useEffect(() => {
-    async function fetchData() {
-      const colRef = query(
-        collection(db, "posts"),
-        where("status", "==", postStatus.APPROVED)
-      );
+    const q =
+      userInfo?.bookmarkPostsId?.length > 0
+        ? query(
+            collection(db, "posts"),
+            where(
+              "uid",
+              "in",
+              userInfo?.bookmarkPostsId?.map(function (item) {
+                return item["id"];
+              })
+            ),
+            where("status", "==", postStatus.APPROVED)
+          )
+        : null;
 
-      setLoadingTable(true);
-      onSnapshot(colRef, (snapshot) => {
-        let results = [];
-        snapshot.forEach((doc) => {
-          results.push({
-            id: doc.id,
-            ...doc.data(),
+    if (q) {
+      try {
+        async function fetchData() {
+          const querySnapshot = await getDocs(q);
+          let results = [];
+          querySnapshot.forEach((doc) => {
+            results.push({
+              id: doc.id,
+              ...doc.data(),
+            });
           });
-        });
-        setPostList(results);
-      });
-      setLoadingTable(false);
+          setPostList(results);
+        }
+        fetchData();
+      } catch (e) {}
+    } else {
     }
-    fetchData();
-  }, []);
+  }, [userInfo?.bookmarkPostsId]);
 
-  const [userId, setUserId] = useState("");
-
-  useEffect(() => {
-    if (userInfo) {
-      async function fetchData() {
-        const colRef = query(
-          collection(db, "users"),
-          where("email", "==", userInfo?.email ? userInfo?.email : ""),
-          where("status", "==", 1)
-        );
-
-        onSnapshot(colRef, (snapShot) => {
-          snapShot.forEach((doc) => {
-            setUserId(doc.id);
-          });
-        });
-      }
-      fetchData();
-    }
-  }, [userInfo]);
-
+  // handle delete post in bookmark to uid
   async function handleDeletePost(postId) {
     Swal.fire({
       title: "Are you sure?",
@@ -88,29 +78,16 @@ const BookmarksPage = () => {
       if (result.isConfirmed) {
         const docRef = doc(db, "users", userId);
         await updateDoc(docRef, {
-          bookmarkPostsId: userInfo?.bookmarkPostsId.filter(
-            (e) => e !== postId
-          ),
+          bookmarkPostsId: arrayRemove({ id: postId }),
         });
-        window.location.reload();
         Swal.fire("Deleted!", "Your post has been deleted.", "success");
       }
     });
   }
 
-  useEffect(() => {
-    if (userInfo) {
-      postList.forEach((item) => {
-        userInfo?.bookmarkPostsId?.forEach((item2) => {
-          if (item.id === item2) {
-            setPostBookmarkList((prev) => [...prev, item]);
-          }
-        });
-      });
-    }
-  }, [postList, userInfo]);
+  // handle load more btn
   const handleLoadMorePost = () => {
-    setPostPerPage(postPerPage + POST_PER_PAGE);
+    setPostPerPage(postPerPage + POST_PER_PAGE_5);
   };
 
   return (
@@ -131,8 +108,9 @@ const BookmarksPage = () => {
           </tr>
         </thead>
         <tbody>
-          {postBookmarkList.length > 0 &&
-            postBookmarkList
+          {userInfo?.bookmarkPostsId?.length > 0 &&
+            postList.length > 0 &&
+            postList
               .map((post) => {
                 const date = post?.createdAt?.seconds
                   ? new Date(post?.createdAt?.seconds * 1000)
@@ -144,11 +122,15 @@ const BookmarksPage = () => {
                     <td title={post?.id}>{post.id?.slice(0, 5) + "..."}</td>
                     <td className="!pr-[100px]">
                       <div className="flex items-center gap-x-3">
-                        <img
-                          src={post.image}
-                          alt=""
-                          className="w-[66px] h-[55px] rounded object-cover"
-                        />
+                        {post.image ? (
+                          <img
+                            src={post.image}
+                            alt=""
+                            className="w-[66px] h-[55px] rounded object-cover"
+                          />
+                        ) : (
+                          ""
+                        )}
                         <div className="flex-1">
                           <h3 className="font-semibold">{post.title}</h3>
                           <time className="text-sm text-gray-500">
@@ -173,7 +155,7 @@ const BookmarksPage = () => {
                           onClick={() => navigate(`/${post.slug}`)}
                         ></ActionView>
                         <ActionDelete
-                          onClick={() => handleDeletePost(post.id)}
+                          onClick={() => handleDeletePost(post.uid)}
                         ></ActionDelete>
                       </div>
                     </td>
@@ -183,16 +165,14 @@ const BookmarksPage = () => {
               .slice(0, postPerPage)}
         </tbody>
       </Table>
-      {loadingTable ? (
-        <Loading></Loading>
-      ) : postBookmarkList.length <= 0 ? (
+      {postList.length <= 0 || userInfo?.bookmarkPostsId?.length <= 0 ? (
         <div className="text-center mt-10 text-xxl font-semibold text-primary">
           Data is empty
         </div>
       ) : (
         ""
       )}
-      {postPerPage < postBookmarkList.length && (
+      {postPerPage < postList.length && (
         <div className="mt-10 text-center">
           <Button className="mx-auto" onClick={handleLoadMorePost}>
             Load more

@@ -68,6 +68,7 @@ const SignUpPage = () => {
       });
 
       await setDoc(doc(db, "users", auth.currentUser.uid), {
+        uid: auth.currentUser.uid,
         fullname: values.fullname,
         email: values.email,
         password: values.password,

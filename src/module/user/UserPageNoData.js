@@ -9,7 +9,7 @@ const UserPageNoData = () => {
     <Layout>
       <div className="container">
         <div className="pt-10"></div>
-        <Heading>Các bài viết của {params.slug}</Heading>
+        <Heading>{params.slug}'s posts</Heading>
         <div className="text-center mt-10 text-xxl font-semibold text-primary">
           Data is empty
         </div>

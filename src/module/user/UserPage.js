@@ -93,7 +93,7 @@ const UserPage = () => {
     <Layout>
       <div className="container">
         <div className="pt-10"></div>
-        <Heading>Các bài viết của {postList[0].user.fullname}</Heading>
+        <Heading>{postList[0].user.fullname}'s posts</Heading>
         <div className="grid-layout grid-layout--primary">
           {postList.map((item) => (
             <PostItem key={item.id} data={item}></PostItem>

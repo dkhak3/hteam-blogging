@@ -10,6 +10,8 @@ import { useState } from "react";
 export default function useFirebaseImage(
   setValue,
   getValues,
+  setError,
+  clearErrors,
   imageName = null,
   cb = null
 ) {
@@ -53,9 +55,23 @@ export default function useFirebaseImage(
   };
   const handleSelectImage = (e) => {
     const file = e.target.files[0];
+    console.log(
+      "🚀 ~ file: useFirebaseImage.js:56 ~ handleSelectImage ~ file:",
+      file
+    );
     if (!file) return;
-    setValue("image_name", file.name);
-    handleUploadImage(file);
+    if (file.type === "image/png" || file.type === "image/jpeg") {
+      console.log("clear image error");
+      setValue("image_name", file.name);
+      handleUploadImage(file);
+      clearErrors("image");
+    } else {
+      handleResetUpload();
+      setError("image", {
+        type: "manual",
+        message: "Invalid file type. Only JPEG, PNG are allowed.",
+      });
+    }
   };
 
   const handleDeleteImage = () => {

@@ -82,6 +82,7 @@ const Footer = () => {
         <a
           className="text-neutral-800 dark:text-neutral-400"
           href="https://github.com/dkhak3"
+          target="_blank"
         >
           duykhadev
         </a>

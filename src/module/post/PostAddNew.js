@@ -4,7 +4,7 @@ import { Dropdown } from "components/dropdown";
 import { Field, FieldCheckboxes } from "components/field";
 import { Input, Textarea } from "components/input";
 import { Label } from "components/label";
-import { postStatus, userRole } from "utils/constants";
+import { categoryStatus, postStatus, userRole } from "utils/constants";
 import { Radio } from "components/checkbox";
 import { toast } from "react-toastify";
 import { useAuth } from "contexts/auth-context";
@@ -32,6 +32,7 @@ import ImageUploader from "quill-image-uploader";
 import "react-quill/dist/quill.snow.css";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { v4 as uuidv4 } from "uuid";
 
 const schema = yup.object().shape({
   title: yup
@@ -65,26 +66,23 @@ const schema = yup.object().shape({
   content: yup
     .string()
     .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
-    .test(
-      "noMultipleWhitespace",
-      "Multiple whitespaces are not allowed",
-      (value) => !/\s\s+/.test(value)
-    )
     .max(30000, "Please do not enter more than 30000 characters")
     .required("Please enter your content"),
+  category: yup
+    .string()
+    .transform((originalValue, originalObject) => {
+      // If the value is an object, convert it to a string, otherwise leave it as is
+      return typeof originalValue === "object"
+        ? JSON.stringify(originalValue)
+        : originalValue;
+    })
+    .required("Please select an option"),
 });
 
 Quill.register("modules/imageUploader", ImageUploader);
 
 const PostAddNew = () => {
   const { userInfo } = useAuth();
-  // const [content, setContent] = useState("");
-  const categoryDefault = {
-    id: "shYPMmrmd2YJSz9shQec",
-    name: "Other",
-    slug: "other",
-    status: 1,
-  };
 
   const {
     control,
@@ -93,6 +91,9 @@ const PostAddNew = () => {
     handleSubmit,
     getValues,
     reset,
+    setError,
+    clearErrors,
+    register,
     formState: { errors, isValid, isSubmitting },
   } = useForm({
     mode: "onChange",
@@ -100,23 +101,19 @@ const PostAddNew = () => {
     defaultValues: {
       title: "",
       slug: "",
-      status: 2,
+      status: postStatus.PENDING,
       hot: false,
       image: "",
-      category: categoryDefault,
+      category: "",
       user: {},
       shortContent: "",
       content: "",
     },
   });
+  console.log("🚀 ~ file: PostAddNew.js:97 ~ PostAddNew ~ errors:", errors);
 
   const watchStatus = watch("status");
   const watchHot = watch("hot");
-  const watchContent = watch("content");
-
-  const setContent = (editorState) => {
-    setValue("content", editorState);
-  };
 
   const {
     image,
@@ -124,7 +121,7 @@ const PostAddNew = () => {
     progress,
     handleSelectImage,
     handleDeleteImage,
-  } = useFirebaseImage(setValue, getValues);
+  } = useFirebaseImage(setValue, getValues, setError, clearErrors);
 
   const [categories, setCategories] = useState([]);
   const [selectCategory, setSelectCategory] = useState("");
@@ -162,8 +159,9 @@ const PostAddNew = () => {
       const colRef = collection(db, "posts");
       await addDoc(colRef, {
         ...cloneValues,
+        uid: uuidv4(),
+        category: JSON.parse(values.category),
         image,
-        content: watchContent,
         loveIdUsers: [],
         commentIdUsers: [],
         createdAt: serverTimestamp(),
@@ -173,7 +171,7 @@ const PostAddNew = () => {
       reset({
         title: "",
         slug: "",
-        status: 2,
+        status: postStatus.PENDING,
         category: {},
         hot: false,
         image: "",
@@ -191,7 +189,7 @@ const PostAddNew = () => {
   useEffect(() => {
     async function getData() {
       const colRef = collection(db, "categories");
-      const q = query(colRef, where("status", "==", 1));
+      const q = query(colRef, where("status", "==", categoryStatus.APPROVED));
       const querySnapshot = await getDocs(q);
       let result = [];
       querySnapshot.forEach((doc) => {
@@ -217,6 +215,7 @@ const PostAddNew = () => {
       id: docData.id,
       ...docData.data(),
     });
+    clearErrors("category");
 
     setSelectCategory(item);
   };
@@ -292,8 +291,11 @@ const PostAddNew = () => {
           </Field>
           <Field>
             <Label>Category</Label>
-            <Dropdown name="selectedOption">
-              <Dropdown.Select placeholder="Select the category"></Dropdown.Select>
+            <Dropdown name="category">
+              <Dropdown.Select
+                error={`${errors.category ? errors.category : ""}`}
+                placeholder="Select the category"
+              ></Dropdown.Select>
               <Dropdown.List>
                 {categories.length > 0 &&
                   categories.map((item) => (
@@ -306,6 +308,12 @@ const PostAddNew = () => {
                   ))}
               </Dropdown.List>
             </Dropdown>
+            {errors?.category && (
+              <span className="text-sm font-medium text-red-500 mb-6">
+                {errors?.category?.message}
+              </span>
+            )}
+
             {selectCategory?.name && (
               <span className="inline-block p-3 rounded-lg bg-green-50 text-sm text-green-600 font-medium">
                 {selectCategory?.name}
@@ -329,24 +337,29 @@ const PostAddNew = () => {
           <Field>
             <Label>Content</Label>
             <div className="w-full entry-content">
-              {/* <ReactQuill
-                modules={modules}
-                theme="snow"
-                value={content}
-                onChange={setContent}
-              /> */}
-              <ReactQuill
-                placeholder="Write your content..."
-                modules={modules}
-                theme="snow"
-                value={watchContent}
-                onChange={setContent}
-                // value={editorContent}
-                // onChange={onEditorStateChange}
+              <Controller
+                name="content"
+                id="content"
+                control={control}
+                render={({ field }) => (
+                  <div>
+                    <ReactQuill
+                      {...field}
+                      placeholder="Write your content..."
+                      modules={modules}
+                      theme="snow"
+                      className={`${
+                        errors.content ? "!border !border-red-500" : ""
+                      }`}
+                    />
+                    {errors.content && (
+                      <span className="text-sm font-medium text-red-500 mb-6">
+                        {errors.content.message}
+                      </span>
+                    )}
+                  </div>
+                )}
               />
-              <p className="text-red-500">
-                {errors?.content ? errors?.content?.message : ""}
-              </p>
             </div>
           </Field>
         </div>
@@ -392,14 +405,30 @@ const PostAddNew = () => {
         ) : (
           ""
         )}
-        <Button
-          type="submit"
-          className="mx-auto w-[250px]"
-          isLoading={isSubmitting}
-          disabled={isSubmitting}
-        >
-          Add new post
-        </Button>
+        {errors.title ||
+        errors.slug ||
+        errors.shortContent ||
+        errors.content ||
+        errors.image ? (
+          <Button
+            type="submit"
+            kind="primary"
+            className="mx-auto w-[250px]"
+            disabled={true}
+          >
+            Add new post
+          </Button>
+        ) : (
+          <Button
+            type="submit"
+            kind="primary"
+            className="mx-auto w-[250px]"
+            isLoading={isSubmitting}
+            disabled={isSubmitting}
+          >
+            Add new post
+          </Button>
+        )}
       </form>
     </>
   );

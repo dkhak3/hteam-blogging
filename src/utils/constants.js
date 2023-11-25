@@ -1,3 +1,8 @@
+import { LabelStatus } from "components/label";
+import { db } from "firebase-app/firebase-config";
+import { collection, doc, getDocs, query, where } from "firebase/firestore";
+import { useEffect } from "react";
+
 export const theme = {
   primary: "#1DC071",
   secondary: "#A4D96C",
@@ -15,7 +20,7 @@ export const theme = {
 };
 
 export const postStatus = {
-  APPROVED: 1,  
+  APPROVED: 1,
   PENDING: 2,
   REJECTED: 3,
 };
@@ -35,4 +40,54 @@ export const userRole = {
   ADMIN: 1,
   MOD: 2,
   USER: 3,
+};
+
+export const POST_PER_PAGE_5 = 5;
+export const POST_PER_PAGE_8 = 8;
+
+export const renderPostStatus = (status) => {
+  switch (status) {
+    case postStatus.APPROVED:
+      return <LabelStatus type="success">Approved</LabelStatus>;
+    case postStatus.PENDING:
+      return <LabelStatus type="warning">Pending</LabelStatus>;
+    case postStatus.REJECTED:
+      return <LabelStatus type="danger">Rejected</LabelStatus>;
+
+    default:
+      break;
+  }
+};
+
+export const checkUsernameExistsByUid = async (username = "", userId = "") => {
+  try {
+    const usersCollectionRef = collection(db, "users");
+    const q = query(
+      usersCollectionRef,
+      where("username", "==", username),
+      where("uid", "!=", userId)
+    );
+    const querySnapshot = await getDocs(q);
+
+    return !querySnapshot.empty; // Returns true if username exists, false otherwise
+  } catch (error) {
+    console.error("Error checking username existence:", error);
+    throw error;
+  }
+};
+export const checkEmailExistsByUid = async (email = "", userId = "") => {
+  try {
+    const usersCollectionRef = collection(db, "users");
+    const q = query(
+      usersCollectionRef,
+      where("email", "==", email),
+      where("uid", "!=", userId)
+    );
+    const querySnapshot = await getDocs(q);
+
+    return !querySnapshot.empty; // Returns true if username exists, false otherwise
+  } catch (error) {
+    console.error("Error checking username existence:", error);
+    throw error;
+  }
 };

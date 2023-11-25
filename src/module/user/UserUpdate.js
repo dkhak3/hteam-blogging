@@ -14,7 +14,12 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { userRole, userStatus } from "utils/constants";
+import {
+  checkEmailExistsByUid,
+  checkUsernameExistsByUid,
+  userRole,
+  userStatus,
+} from "utils/constants";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import InputPasswordToggle from "components/input/InputPasswordToggle";
@@ -39,7 +44,9 @@ const schema = yup.object({
     .string()
     .matches(/^\S*$/, "Whitespace is not allowed")
     .max(255, "Your username must not exceed 255 characters")
-    .required("Please enter your username"),
+    .required("Please enter your username")
+    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    .matches(/^[a-z0-9]+(?:[_-][a-z0-9]+)*$/, "Invalid slug format"),
   description: yup
     .string()
     .matches(/^\S*$/, "Whitespace is not allowed")
@@ -64,6 +71,8 @@ const UserUpdate = () => {
     watch,
     setValue,
     getValues,
+    setError,
+    clearErrors,
     formState: { errors, isValid, isSubmitting },
     reset,
   } = useForm({
@@ -71,7 +80,6 @@ const UserUpdate = () => {
     resolver: yupResolver(schema),
     defaultValues: {},
   });
-
   const [params] = useSearchParams();
   const userId = params.get("id");
   const navigate = useNavigate();
@@ -91,25 +99,46 @@ const UserUpdate = () => {
 
   const handleUpdateUser = async (values) => {
     if (!isValid) return;
-    try {
-      await updateProfile(auth.currentUser, {
-        displayName: values.fullname,
-      });
-      const colRef = doc(db, "users", userId);
-      await updateDoc(colRef, {
-        ...values,
-        avatar: image,
-        role: Number(values.role),
-        status: Number(values.status),
-        permissions: [
-          Number(values.role) === userRole.ADMIN ? "ADMIN_FUNC" : "USER_FUNC",
-        ],
-      });
 
-      toast.success("Update user successfully!");
-      navigate("/manage/user");
-    } catch (error) {
-      toast.error("Update user failed!");
+    const checkUser = await checkUsernameExistsByUid(
+      values.username,
+      values.uid
+    );
+    const checkEmail = await checkEmailExistsByUid(values.email, values.uid);
+
+    if (checkUser) {
+      setError("username", {
+        type: "manual",
+        message: "Username already exists",
+      });
+    } else if (checkEmail) {
+      setError("email", {
+        type: "manual",
+        message: "email already exists",
+      });
+    } else if (!checkUser && !checkEmail) {
+      clearErrors("username");
+      clearErrors("email");
+      try {
+        await updateProfile(auth.currentUser, {
+          displayName: values.fullname,
+        });
+        const colRef = doc(db, "users", userId);
+        await updateDoc(colRef, {
+          ...values,
+          avatar: image,
+          role: Number(values.role),
+          status: Number(values.status),
+          permissions: [
+            Number(values.role) === userRole.ADMIN ? "ADMIN_FUNC" : "USER_FUNC",
+          ],
+        });
+
+        toast.success("Update user successfully!");
+        navigate("/manage/users");
+      } catch (error) {
+        toast.error("Update user failed!");
+      }
     }
   };
 
@@ -263,15 +292,32 @@ const UserUpdate = () => {
             ></Textarea>
           </Field>
         </div>
-        <Button
-          type="submit"
-          kind="primary"
-          className="mx-auto w-[200px]"
-          isLoading={isSubmitting}
-          disabled={isSubmitting}
-        >
-          Update user
-        </Button>
+        {errors.fullname ||
+        errors.username ||
+        errors.description ||
+        errors.email ||
+        errors.password ||
+        errors.phone ||
+        errors.birthday ? (
+          <Button
+            type="submit"
+            kind="primary"
+            className="mx-auto w-[200px]"
+            disabled={true}
+          >
+            Update
+          </Button>
+        ) : (
+          <Button
+            type="submit"
+            kind="primary"
+            className="mx-auto w-[200px]"
+            isLoading={isSubmitting}
+            disabled={isSubmitting}
+          >
+            Update
+          </Button>
+        )}
       </form>
     </div>
   );

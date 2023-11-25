@@ -1,5 +1,7 @@
 import { db } from "firebase-app/firebase-config";
 import {
+  arrayRemove,
+  arrayUnion,
   collection,
   doc,
   onSnapshot,
@@ -11,10 +13,20 @@ import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { FacebookShareButton, TwitterShareButton } from "react-share";
 import { useLocation } from "react-router-dom";
+import useGetUserIdByEmail from "hooks/useGetUserIdByEmail";
 
 const ActionsPostDetailsPage = ({ postInfo = [], userInfo = [] }) => {
+  console.log(
+    "🚀 ~ file: ActionsPostDetailsPage.js:18 ~ ActionsPostDetailsPage ~ userInfo:",
+    userInfo
+  );
+  console.log(
+    "🚀 ~ file: ActionsPostDetailsPage.js:18 ~ ActionsPostDetailsPage ~ postInfo:",
+    postInfo
+  );
   const [userId, setUserId] = useState("");
   const urlPost = window.location.href;
+  const { userId: userIdByEmail } = useGetUserIdByEmail(userInfo?.email || "");
 
   // get userid đang login
   useEffect(() => {
@@ -70,24 +82,36 @@ const ActionsPostDetailsPage = ({ postInfo = [], userInfo = [] }) => {
   // handle bookmark
   const hanleSaveBookmark = async () => {
     if (userInfo) {
-      toast.success("Add to saved folder");
-      const docRefUser = doc(db, "users", userId);
-      await updateDoc(docRefUser, {
-        bookmarkPostsId: [...userInfo?.bookmarkPostsId, postInfo?.id],
-      });
+      const userRef = doc(db, "users", userIdByEmail || "");
+
+      updateDoc(userRef, {
+        bookmarkPostsId: arrayUnion({
+          id: postInfo?.uid,
+        }),
+      })
+        .then(() => {
+          toast.success("Add to saved folder");
+        })
+        .catch((error) => {
+          toast.error("Cannot add to saved folder");
+        });
     } else {
       toast.info("Please log in to do it");
     }
   };
   const handleDeleteBookmark = async () => {
     if (userInfo) {
-      toast.success("Delete from saved folder");
-      const docRefUser = doc(db, "users", userId);
-      await updateDoc(docRefUser, {
-        bookmarkPostsId: userInfo?.bookmarkPostsId.filter(
-          (e) => e !== postInfo?.id
-        ),
-      });
+      const userRef = doc(db, "users", userIdByEmail || "");
+
+      updateDoc(userRef, {
+        bookmarkPostsId: arrayRemove({ id: postInfo?.uid }),
+      })
+        .then((e) => {
+          toast.success("Delete from saved folder");
+        })
+        .catch((error) => {
+          toast.error("Cannot delete from saved folder");
+        });
     } else {
       toast.info("Please log in to do it");
     }
@@ -185,7 +209,7 @@ const ActionsPostDetailsPage = ({ postInfo = [], userInfo = [] }) => {
       <div className="bookmark flex items-center justify-center">
         {userInfo &&
         userInfo?.bookmarkPostsId?.find((item) =>
-          [postInfo?.id].includes(item)
+          [postInfo?.uid].includes(item.id)
         ) ? (
           <div title="You saved this post">
             <svg

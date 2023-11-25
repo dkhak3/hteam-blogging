@@ -56,11 +56,15 @@ const PostNewestItem = ({ data }) => {
   const formatDate = new Date(date).toLocaleDateString("vi-VI");
   return (
     <PostNewestItemStyles>
-      <PostImage
-        url={data?.image}
-        alt={data?.title}
-        to={data?.slug}
-      ></PostImage>
+      {data?.image ? (
+        <PostImage
+          url={data?.image}
+          alt={data?.title}
+          to={data?.slug}
+        ></PostImage>
+      ) : (
+        ""
+      )}
 
       <div className="post-content">
         {data?.category?.name && (

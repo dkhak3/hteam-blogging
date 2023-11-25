@@ -31,6 +31,10 @@ import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Loading from "components/common/Loading";
 import { useNavigate } from "react-router-dom";
+import {
+  checkEmailExistsByUid,
+  checkUsernameExistsByUid,
+} from "utils/constants";
 
 const phoneRegExp =
   /^(0|84)(2(0[3-9]|1[0-6|8|9]|2[0-2|5-9]|3[2-9]|4[0-9]|5[1|2|4-9]|6[0-3|9]|7[0-7]|8[0-9]|9[0-4|6|7|9])|3[2-9]|5[5|6|8|9]|7[0|6-9]|8[0-6|8|9]|9[0-4|6-9])([0-9]{7})$/;
@@ -87,7 +91,6 @@ const UserProfile = () => {
 
   const navigate = useNavigate();
   const [userId, setUserId] = useState();
-  const [userList, setUserList] = useState([]);
   // get userid by email
   useEffect(() => {
     const colRef = collection(db, "users");
@@ -100,23 +103,6 @@ const UserProfile = () => {
       });
     }
   }, [userInfo?.email]);
-
-  // get all user
-  useEffect(() => {
-    const colRef = collection(db, "users");
-    if (userInfo) {
-      let results = [];
-      onSnapshot(colRef, (snapshot) => {
-        snapshot.forEach((doc) => {
-          results.push({
-            id: doc.id,
-            ...doc.data(),
-          });
-        });
-        setUserList(results);
-      });
-    }
-  }, [userInfo]);
 
   const imageUrl = getValues("avatar");
   const imageRegex = /%2F(\S+)\?/gm.exec(imageUrl);
@@ -132,17 +118,26 @@ const UserProfile = () => {
 
   const handleUpdateProfile = async (values) => {
     if (!isValid) return;
+    const checkUser = await checkUsernameExistsByUid(
+      values.username,
+      values.uid
+    );
+    const checkEmail = await checkEmailExistsByUid(values.email, values.uid);
 
-    Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, update it!",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
+    if (checkUser) {
+      setError("username", {
+        type: "manual",
+        message: "Username already exists",
+      });
+    } else if (checkEmail) {
+      setError("email", {
+        type: "manual",
+        message: "Email already exists",
+      });
+    } else if (!checkUser && !checkEmail) {
+      clearErrors("username");
+      clearErrors("email");
+      try {
         await updateProfile(auth.currentUser, {
           displayName: values.fullname,
         });
@@ -155,8 +150,10 @@ const UserProfile = () => {
           createUserWithEmailAndPassword(auth, values.email, values.password);
         }
         Swal.fire("Updated!", "Update user successfully.", "success");
+      } catch (error) {
+        toast.error("Update user failed!");
       }
-    });
+    }
   };
 
   async function daleteAvatar() {
@@ -182,40 +179,6 @@ const UserProfile = () => {
 
     fetchData();
   }, [userId, reset]);
-
-  const handleChangeUserName = (e) => {
-    setValue("username", e.target.value);
-    for (let i = 0; i < userList.length; i++) {
-      const item = userList[i];
-
-      if (item.username === getValues("username")) {
-        setError("username", {
-          type: "custom",
-          message: "username already exists",
-        });
-        return;
-      } else if (item.username !== getValues("username")) {
-        return clearErrors("username");
-      }
-    }
-  };
-
-  const handleChangeEmail = (e) => {
-    setValue("email", e.target.value);
-    for (let i = 0; i < userList.length; i++) {
-      const item = userList[i];
-
-      if (item.email === getValues("email")) {
-        setError("email", {
-          type: "custom",
-          message: "email already exists",
-        });
-        return;
-      } else if (item.email !== getValues("email")) {
-        return clearErrors("email");
-      }
-    }
-  };
 
   if (!userInfo) return <Loading></Loading>;
   return (
@@ -251,7 +214,6 @@ const UserProfile = () => {
               name="username"
               placeholder="Enter your username"
               error={errors?.username?.message}
-              onChange={handleChangeUserName}
             ></Input>
           </Field>
         </div>
@@ -286,9 +248,17 @@ const UserProfile = () => {
               type="email"
               placeholder="Enter your email address"
               error={errors?.email?.message}
-              onChange={handleChangeEmail}
             ></Input>
           </Field>
+          <Field>
+            <Label>New Password</Label>
+            <InputPasswordToggle
+              control={control}
+              error={errors?.password?.message}
+            ></InputPasswordToggle>
+          </Field>
+        </div>
+        <div className="form-layout">
           <Field>
             <Label>Description</Label>
             <Textarea
@@ -296,15 +266,6 @@ const UserProfile = () => {
               control={control}
               error={errors?.description?.message}
             ></Textarea>
-          </Field>
-        </div>
-        <div className="form-layout">
-          <Field>
-            <Label>New Password</Label>
-            <InputPasswordToggle
-              control={control}
-              error={errors?.password?.message}
-            ></InputPasswordToggle>
           </Field>
           {/* <Field>
             <Label>Confirm Password</Label>

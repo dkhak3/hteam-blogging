@@ -19,9 +19,9 @@ import {
 import useFirebaseImage from "hooks/useFirebaseImage";
 import DashboardHeading from "module/dashboard/DashboardHeading";
 import React, { useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
-import { useSearchParams } from "react-router-dom";
-import { postStatus, userRole } from "utils/constants";
+import { Controller, useForm } from "react-hook-form";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { categoryStatus, postStatus, userRole } from "utils/constants";
 import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { toast } from "react-toastify";
@@ -53,8 +53,8 @@ const schema = yup.object().shape({
     .matches(
       /^[a-z0-9-]*$/,
       "Slug must contain only lowercase letters, numbers, and hyphens"
-    )
-    .max(100, "Please do not enter more than 100 characters"),
+    ),
+  // .max(100, "Please do not enter more than 100 characters"),
   shortContent: yup
     .string()
     .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
@@ -68,25 +68,24 @@ const schema = yup.object().shape({
   content: yup
     .string()
     .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
-    .test(
-      "noMultipleWhitespace",
-      "Multiple whitespaces are not allowed",
-      (value) => !/\s\s+/.test(value)
-    )
     .max(30000, "Please do not enter more than 30000 characters")
     .required("Please enter your content"),
+  category: yup
+    .string()
+    .transform((originalValue, originalObject) => {
+      // If the value is an object, convert it to a string, otherwise leave it as is
+      return typeof originalValue === "object"
+        ? JSON.stringify(originalValue)
+        : originalValue;
+    })
+    .required("Please select an option"),
 });
 
 const PostUpdate = () => {
   const { userInfo } = useAuth();
   const [params] = useSearchParams();
   const postId = params.get("id");
-  // const [content, setContent] = useState("");
-  const categoryDefault = {
-    id: "VuoVTxmDLhPsAweBUFXG",
-    name: "Other",
-    slug: "other",
-  };
+  const navigate = useNavigate();
   const {
     handleSubmit,
     control,
@@ -94,6 +93,8 @@ const PostUpdate = () => {
     watch,
     reset,
     getValues,
+    setError,
+    clearErrors,
     formState: { errors, isValid, isSubmitting },
   } = useForm({
     mode: "onChange",
@@ -101,10 +102,10 @@ const PostUpdate = () => {
     defaultValues: {
       title: "",
       slug: "",
-      status: 2,
+      status: postStatus.PENDING,
       hot: false,
       image: "",
-      category: categoryDefault,
+      category: "",
       user: {},
       shortContent: "",
       content: "",
@@ -113,13 +114,24 @@ const PostUpdate = () => {
 
   const imageUrl = getValues("image");
   const imageName = getValues("image_name");
-  const { image, setImage, progress, handleSelectImage, handleDeleteImage } =
-    useFirebaseImage(setValue, getValues, imageName, deletePostImage);
+  // const { image, setImage, progress, handleSelectImage, handleDeleteImage } =
+  //   useFirebaseImage(
+  //     setValue,
+  //     getValues,
+  //     imageName,
+  //     setError,
+  //     clearErrors
+  //     // deletePostImage,
+  //   );
+  const {
+    image,
+    setImage,
+    handleResetUpload,
+    progress,
+    handleSelectImage,
+    handleDeleteImage,
+  } = useFirebaseImage(setValue, getValues, setError, clearErrors);
   async function deletePostImage() {
-    // if (userInfo.role !== userRole.ADMIN) {
-    //   Swal.fire("Failed", "You have no right to do this action", "warning");
-    //   return;
-    // }
     const colRef = doc(db, "users", postId);
     await updateDoc(colRef, {
       avatar: "",
@@ -131,6 +143,8 @@ const PostUpdate = () => {
 
   const watchHot = watch("hot");
   const watchStatus = watch("status");
+
+  // get data
   useEffect(() => {
     async function fetchData() {
       if (!postId) return;
@@ -140,23 +154,20 @@ const PostUpdate = () => {
         reset(docSnapshot.data());
         setSelectCategory(docSnapshot.data()?.category || "");
         // setContent(docSnapshot.data()?.content || "");
-        setValue("content", docSnapshot.data()?.content || "");
+        // setValue("content", docSnapshot.data()?.content || "");
       }
     }
     fetchData();
   }, [postId, reset, setValue]);
+
   const [selectCategory, setSelectCategory] = useState("");
   const [categories, setCategories] = useState([]);
-  const watchContent = watch("content");
 
-  const setContent = (editorState) => {
-    console.log("editorState", editorState);
-    setValue("content", editorState);
-  };
+  // get category list
   useEffect(() => {
     async function getCategoriesData() {
       const colRef = collection(db, "categories");
-      const q = query(colRef, where("status", "==", 1));
+      const q = query(colRef, where("status", "==", categoryStatus.APPROVED));
       const querySnapshot = await getDocs(q);
       let result = [];
       querySnapshot.forEach((doc) => {
@@ -165,10 +176,13 @@ const PostUpdate = () => {
           ...doc.data(),
         });
       });
+
       setCategories(result);
     }
     getCategoriesData();
   }, []);
+
+  // handle set category name
   const handleClickOption = async (item) => {
     const colRef = doc(db, "categories", item.id);
     const docData = await getDoc(colRef);
@@ -176,24 +190,32 @@ const PostUpdate = () => {
       id: docData.id,
       ...docData.data(),
     });
+    clearErrors("category");
+
     setSelectCategory(item);
   };
+
+  // handle update
   const updatePostHandler = async (values) => {
     if (!isValid) return;
-    // if (userInfo.role !== userRole.ADMIN) {
-    //   Swal.fire("Failed", "You have no right to do this action", "warning");
-    //   return;
-    // }
-    const docRef = doc(db, "posts", postId);
-    values.status = Number(values.status);
-    values.slug = slugify(values.slug || values.title, { lower: true });
-    await updateDoc(docRef, {
-      ...values,
-      image,
-      content: watchContent,
-    });
-    toast.success("Update post successfully!");
+    try {
+      const docRef = doc(db, "posts", postId);
+      values.status = Number(values.status);
+      values.slug = slugify(
+        values.slug + "-" + Math.floor(Math.random() * 999999) || values.title,
+        { lower: true }
+      );
+      await updateDoc(docRef, {
+        ...values,
+        category: JSON.parse(values.category),
+        image,
+      });
+      handleResetUpload();
+      toast.success("Update post successfully!");
+      navigate("/manage/posts");
+    } catch (error) {}
   };
+
   const modules = useMemo(
     () => ({
       toolbar: [
@@ -226,6 +248,7 @@ const PostUpdate = () => {
     }),
     []
   );
+
   if (!postId) return null;
   return (
     <>
@@ -251,6 +274,8 @@ const PostUpdate = () => {
               placeholder="Enter your slug"
               name="slug"
               error={errors?.slug?.message}
+              disabled
+              className="cursor-no-drop opacity-50"
             ></Input>
           </Field>
         </div>
@@ -263,13 +288,17 @@ const PostUpdate = () => {
               className="h-[250px]"
               progress={progress}
               image={image}
+              name="image"
               error={errors?.image?.message}
             ></ImageUpload>
           </Field>
           <Field>
             <Label>Category</Label>
             <Dropdown>
-              <Dropdown.Select placeholder="Select the category"></Dropdown.Select>
+              <Dropdown.Select
+                error={`${errors.category ? errors.category : ""}`}
+                placeholder="Select the category"
+              ></Dropdown.Select>
               <Dropdown.List>
                 {categories.length > 0 &&
                   categories.map((item) => (
@@ -282,6 +311,12 @@ const PostUpdate = () => {
                   ))}
               </Dropdown.List>
             </Dropdown>
+            {errors?.category && (
+              <span className="text-sm font-medium text-red-500 mb-6">
+                {errors?.category?.message}
+              </span>
+            )}
+
             {selectCategory?.name && (
               <span className="inline-block p-3 text-sm font-medium text-green-600 rounded-lg bg-green-50">
                 {selectCategory?.name}
@@ -305,15 +340,28 @@ const PostUpdate = () => {
           <Field>
             <Label>Content</Label>
             <div className="w-full entry-content">
-              <ReactQuill
-                modules={modules}
-                theme="snow"
-                value={watchContent}
-                onChange={setContent}
+              <Controller
+                name="content"
+                control={control}
+                render={({ field }) => (
+                  <div>
+                    <ReactQuill
+                      placeholder="Write your content..."
+                      modules={modules}
+                      theme="snow"
+                      className={`${
+                        errors.content ? "!border !border-red-500" : ""
+                      }`}
+                      {...field}
+                    />
+                    {errors.content && (
+                      <span className="text-sm font-medium text-red-500 mb-6">
+                        {errors.content.message}
+                      </span>
+                    )}
+                  </div>
+                )}
               />
-              <p className="text-red-500">
-                {errors?.content ? errors?.content?.message : ""}
-              </p>
             </div>
           </Field>
         </div>
@@ -359,14 +407,30 @@ const PostUpdate = () => {
         ) : (
           ""
         )}
-        <Button
-          type="submit"
-          className="mx-auto w-[250px]"
-          isLoading={isSubmitting}
-          disabled={isSubmitting}
-        >
-          Update post
-        </Button>
+        {errors.title ||
+        errors.slug ||
+        errors.shortContent ||
+        errors.content ||
+        errors.image ? (
+          <Button
+            type="submit"
+            kind="primary"
+            className="mx-auto w-[250px]"
+            disabled={true}
+          >
+            Update post
+          </Button>
+        ) : (
+          <Button
+            type="submit"
+            kind="primary"
+            className="mx-auto w-[250px]"
+            isLoading={isSubmitting}
+            disabled={isSubmitting}
+          >
+            Update post
+          </Button>
+        )}
       </form>
     </>
   );

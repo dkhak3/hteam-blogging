@@ -8,6 +8,7 @@ import {
   getDocs,
   limit,
   onSnapshot,
+  orderBy,
   query,
   startAfter,
   where,
@@ -16,7 +17,7 @@ import { debounce } from "lodash";
 import PostItem from "module/post/PostItem";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { postStatus } from "utils/constants";
+import { POST_PER_PAGE_8, postStatus } from "utils/constants";
 
 const PostPageStyles = styled.header`
   padding: 20px 0;
@@ -45,48 +46,12 @@ const PostPageStyles = styled.header`
   }
 `;
 
-const POTS_PER_PAGE = 8;
-// const POTS_PER_PAGE = 2;
-
 const PostPage = () => {
   const [postList, setPostList] = useState([]);
 
   const [filter, setFilter] = useState("");
-  const [lastDoc, setLastDoc] = useState();
-  const [total, setTotal] = useState(0);
-
+  const [postPerPage, setPostPerPage] = useState(POST_PER_PAGE_8);
   const [loadingPage, setLoadingPage] = useState(false);
-
-  const handleLoadMorePost = async () => {
-    console.log("postList", postList.length);
-    console.log("total", total);
-    const nextRef = query(
-      collection(db, "posts"),
-      where("status", "==", postStatus.APPROVED),
-      startAfter(lastDoc),
-      limit(POTS_PER_PAGE)
-    );
-
-    onSnapshot(nextRef, (snapShot) => {
-      let result = [];
-
-      snapShot.forEach((doc) => {
-        result.push({
-          id: doc.id,
-          ...doc.data(),
-        });
-      });
-      setPostList([...postList, ...result]);
-    });
-
-    const documentSnapshots = await getDocs(nextRef);
-    const lastVisible =
-      documentSnapshots.docs[documentSnapshots.docs.length - 1];
-    if (typeof lastVisible === "undefined") {
-      setTotal(0);
-    }
-    setLastDoc(lastVisible);
-  };
 
   useEffect(() => {
     async function fetchData() {
@@ -95,22 +60,15 @@ const PostPage = () => {
       const newRef = filter
         ? query(
             colRef,
+            where("status", "==", postStatus.APPROVED),
             where("title", ">=", filter),
             where("title", "<=", filter + "utf8")
           )
         : query(
             colRef,
             where("status", "==", postStatus.APPROVED),
-            limit(POTS_PER_PAGE)
+            orderBy("createdAt", "desc")
           );
-
-      const documentSnapshots = await getDocs(newRef);
-      const lastVisible =
-        documentSnapshots.docs[documentSnapshots.docs.length - 1];
-
-      onSnapshot(colRef, (snapShot) => {
-        setTotal(snapShot.size);
-      });
 
       onSnapshot(newRef, (snapShot) => {
         let result = [];
@@ -124,11 +82,13 @@ const PostPage = () => {
         setPostList(result);
       });
       setLoadingPage(false);
-
-      setLastDoc(lastVisible);
     }
     fetchData();
   }, [filter]);
+
+  const handleLoadMorePost = () => {
+    setPostPerPage(postPerPage + POST_PER_PAGE_8);
+  };
 
   const handleInputFilter = debounce((e) => {
     setFilter(e.target.value);
@@ -142,7 +102,7 @@ const PostPage = () => {
             <input
               type="text"
               className="search-input"
-              placeholder="Search posts..."
+              placeholder="Search for post name..."
               onChange={handleInputFilter}
             />
             <span className="search-icon">
@@ -177,7 +137,7 @@ const PostPage = () => {
             </span>
           </div>
           <div className="pt-10"></div>
-          <Heading>Tất cả post</Heading>
+          <Heading>Posts</Heading>
           {loadingPage ? (
             <Loading></Loading>
           ) : postList.length <= 0 ? (
@@ -188,14 +148,14 @@ const PostPage = () => {
             ""
           )}
           <div className="grid-layout grid-layout--primary">
-            {postList.map((item) => (
-              <PostItem key={item.id} data={item}></PostItem>
-            ))}
+            {postList
+              .map((item) => <PostItem key={item.id} data={item}></PostItem>)
+              .slice(0, postPerPage)}
           </div>
 
-          {total > postList.length && (
+          {postPerPage < postList.length && (
             <div className="mt-10 mb-10">
-              <Button onClick={handleLoadMorePost} className="mx-auto">
+              <Button className="mx-auto" onClick={handleLoadMorePost}>
                 Load more
               </Button>
             </div>

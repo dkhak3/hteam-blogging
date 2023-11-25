@@ -37,7 +37,11 @@ const PostItem = ({ data }) => {
   if (!data) return null;
   return (
     <PostItemStyles>
-      <PostImage url={data.image} alt={data.title} to={data.slug}></PostImage>
+      {data.image ? (
+        <PostImage url={data.image} alt={data.title} to={data.slug}></PostImage>
+      ) : (
+        ""
+      )}
       <PostCategory to={data.category.slug}>{data.category.name}</PostCategory>
       <PostTitle to={data.slug}>{data.title}</PostTitle>
       <div className="mb-5">{data?.shortContent}</div>
