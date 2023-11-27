@@ -12,7 +12,6 @@ import {
 } from "firebase/firestore";
 import { db } from "firebase-app/firebase-config";
 import { Button } from "components/button";
-import { categoryStatus } from "utils/constants";
 
 const POTS_PER_PAGE = 4;
 
@@ -25,7 +24,7 @@ const PostRelated = ({ categoryId = "" }) => {
     const nextRef = query(
       collection(db, "posts"),
       where("category.id", "==", categoryId),
-      where("status", "==", categoryStatus.APPROVED),
+      where("status", "==", 1),
       startAfter(lastDoc),
       limit(POTS_PER_PAGE)
     );
@@ -53,7 +52,7 @@ const PostRelated = ({ categoryId = "" }) => {
       const colRef = query(
         collection(db, "posts"),
         where("category.id", "==", categoryId),
-        where("status", "==", categoryStatus.APPROVED)
+        where("status", "==", 1)
       );
       const newRef = query(colRef, limit(POTS_PER_PAGE));
 

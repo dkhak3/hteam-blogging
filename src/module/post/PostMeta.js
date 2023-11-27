@@ -25,7 +25,7 @@ const PostMetaStyles = styled.div`
 
 const PostMeta = ({
   date = "Mar 23",
-  authorName = "Andiez Le",
+  authorName = "Blog user",
   className = "",
   to = "",
 }) => {
@@ -35,7 +35,11 @@ const PostMeta = ({
       <span className="post-dot"></span>
       <Link to={`/author/${to}`}>
         <span className="post-author">
-          {authorName.length < 5 ? authorName : authorName.slice(0, 5) + "..."}
+          {authorName
+            ? authorName.length < 5
+              ? authorName
+              : authorName.slice(0, 5) + "..."
+            : "Blog user"}
         </span>
       </Link>
     </PostMetaStyles>

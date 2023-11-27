@@ -9,21 +9,12 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { FacebookShareButton, TwitterShareButton } from "react-share";
-import { useLocation } from "react-router-dom";
 import useGetUserIdByEmail from "hooks/useGetUserIdByEmail";
 
 const ActionsPostDetailsPage = ({ postInfo = [], userInfo = [] }) => {
-  console.log(
-    "🚀 ~ file: ActionsPostDetailsPage.js:18 ~ ActionsPostDetailsPage ~ userInfo:",
-    userInfo
-  );
-  console.log(
-    "🚀 ~ file: ActionsPostDetailsPage.js:18 ~ ActionsPostDetailsPage ~ postInfo:",
-    postInfo
-  );
   const [userId, setUserId] = useState("");
   const urlPost = window.location.href;
   const { userId: userIdByEmail } = useGetUserIdByEmail(userInfo?.email || "");

@@ -5,46 +5,58 @@ import {
   ActionView,
 } from "components/action";
 import { Button } from "components/button";
-import Loading from "components/common/Loading";
-import { LabelStatus } from "components/label";
 import { Table } from "components/table";
 import { useAuth } from "contexts/auth-context";
 import { db } from "firebase-app/firebase-config";
 import {
+  arrayRemove,
   collection,
   deleteDoc,
   doc,
   onSnapshot,
+  orderBy,
   query,
   updateDoc,
   where,
 } from "firebase/firestore";
 import { deleteObject, getStorage, ref } from "firebase/storage";
+import useGetUserIdByEmail from "hooks/useGetUserIdByEmail";
+import { debounce } from "lodash";
 import DashboardHeading from "module/dashboard/DashboardHeading";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
-import { postStatus } from "utils/constants";
-const POST_PER_PAGE = 5;
+import { POST_PER_PAGE_5, postStatus, renderPostStatus } from "utils/constants";
 
 const PostRejectedManage = () => {
   const { userInfo } = useAuth();
   const [postList, setPostList] = useState([]);
-  const [userId, setUserId] = useState("");
-  const [loadingTable, setLoadngTable] = useState(false);
-  const [postPerPage, setPostPerPage] = useState(POST_PER_PAGE);
+  const [filter, setFilter] = useState("");
+  const [postPerPage, setPostPerPage] = useState(POST_PER_PAGE_5);
   const navigate = useNavigate();
 
+  // hook get user id by email
+  const { userId } = useGetUserIdByEmail(userInfo.email || "");
+
+  // handle fetch all data with status = rejected
   useEffect(() => {
     async function fetchData() {
-      const colRef = query(
-        collection(db, "posts"),
-        where("status", "==", postStatus.REJECTED)
-      );
+      const colRef = collection(db, "posts");
+      const newRef = filter
+        ? query(
+            colRef,
+            where("status", "==", postStatus.REJECTED),
+            where("title", ">=", filter),
+            where("title", "<=", filter + "utf8")
+          )
+        : query(
+            colRef,
+            where("status", "==", postStatus.REJECTED),
+            orderBy("createdAt", "desc")
+          );
 
-      setLoadngTable(true);
-      onSnapshot(colRef, (snapshot) => {
+      onSnapshot(newRef, (snapshot) => {
         let results = [];
         snapshot.forEach((doc) => {
           results.push({
@@ -54,11 +66,11 @@ const PostRejectedManage = () => {
         });
         setPostList(results);
       });
-      setLoadngTable(false);
     }
     fetchData();
-  }, []);
+  }, [filter]);
 
+  // handle delete image post
   const handleDeleteImage = (imageName) => {
     const storage = getStorage();
     const imageRef = ref(storage, "images/" + imageName);
@@ -67,25 +79,7 @@ const PostRejectedManage = () => {
       .catch((error) => {});
   };
 
-  //   get userId
-  useEffect(() => {
-    if (userInfo) {
-      async function fetchData() {
-        const colRef = query(
-          collection(db, "users"),
-          where("email", "==", userInfo?.email)
-        );
-
-        onSnapshot(colRef, (snapShot) => {
-          snapShot.forEach((doc) => {
-            setUserId(doc.id);
-          });
-        });
-      }
-      fetchData();
-    }
-  }, [userInfo]);
-
+  // handle delete post by id
   async function handleDeletePost(post) {
     const docRef = doc(db, "posts", post.id);
     Swal.fire({
@@ -100,30 +94,18 @@ const PostRejectedManage = () => {
       if (result.isConfirmed) {
         await deleteDoc(docRef);
         handleDeleteImage(post.image_name);
-        const docRefUser = doc(db, "users", userId);
-        await updateDoc(docRefUser, {
-          bookmarkPostsId: userInfo?.bookmarkPostsId.filter(
-            (e) => e !== post.id
-          ),
-        });
+        const userRef = doc(db, "users", userId);
+        updateDoc(userRef, {
+          bookmarkPostsId: arrayRemove({ id: post?.uid }),
+        })
+          .then((e) => {})
+          .catch((error) => {});
         Swal.fire("Deleted!", "Your post has been deleted.", "success");
       }
     });
   }
-  const renderPostStatus = (status) => {
-    switch (status) {
-      case postStatus.APPROVED:
-        return <LabelStatus type="success">Approved</LabelStatus>;
-      case postStatus.PENDING:
-        return <LabelStatus type="warning">Pending</LabelStatus>;
-      case postStatus.REJECTED:
-        return <LabelStatus type="danger">Rejected</LabelStatus>;
 
-      default:
-        break;
-    }
-  };
-
+  // duyệt bài
   const handleTickPost = async (postId) => {
     const docRef = doc(db, "posts", postId);
     await updateDoc(docRef, {
@@ -131,8 +113,15 @@ const PostRejectedManage = () => {
     });
     toast.success("Post public successfully!");
   };
+
+  // handle search element by title
+  const handleSearchPost = debounce((e) => {
+    setFilter(e.target.value);
+  }, 250);
+
+  // handle load more btn
   const handleLoadMorePost = () => {
-    setPostPerPage(postPerPage + POST_PER_PAGE);
+    setPostPerPage(postPerPage + POST_PER_PAGE_5);
   };
 
   return (
@@ -141,6 +130,16 @@ const PostRejectedManage = () => {
         title="All posts"
         desc="Manage all posts"
       ></DashboardHeading>
+      <div className="flex justify-end gap-5 mb-10">
+        <div className="w-full max-w-[300px]">
+          <input
+            type="text"
+            className="w-full p-4 border border-gray-300 border-solid rounded-lg"
+            placeholder="Search for post name..."
+            onChange={handleSearchPost}
+          />
+        </div>
+      </div>
       <Table>
         <thead>
           <tr>
@@ -164,8 +163,8 @@ const PostRejectedManage = () => {
                 return (
                   <tr key={post.id}>
                     <td title={post?.id}>{post.id?.slice(0, 5) + "..."}</td>
-                    <td className="!pr-[100px]">
-                      <div className="flex items-center gap-x-3">
+                    <td className="!pr-[35px] max-w-xs">
+                      <div className="flex items-center gap-x-3 truncate !text-clip">
                         {post.image ? (
                           <img
                             src={post.image}
@@ -176,7 +175,9 @@ const PostRejectedManage = () => {
                           ""
                         )}
                         <div className="flex-1">
-                          <h3 className="font-semibold">{post.title}</h3>
+                          <h3 title={post.title} className="font-semibold">
+                            {post.title}
+                          </h3>
                           <time className="text-sm text-gray-500">
                             Date: {formatDate}
                           </time>
@@ -219,15 +220,13 @@ const PostRejectedManage = () => {
               .slice(0, postPerPage)}
         </tbody>
       </Table>
-      {loadingTable ? (
-        <Loading></Loading>
-      ) : postList.length <= 0 ? (
+      {postList.length <= 0 ? (
         <div className="text-center mt-10 text-xxl font-semibold text-primary">
           Data is empty
         </div>
       ) : (
         ""
-      )}{" "}
+      )}
       {postPerPage < postList.length && (
         <div className="mt-10 text-center">
           <Button className="mx-auto" onClick={handleLoadMorePost}>

@@ -7,11 +7,9 @@ import {
   collection,
   deleteDoc,
   doc,
-  getDocs,
-  limit,
   onSnapshot,
+  orderBy,
   query,
-  startAfter,
   where,
 } from "firebase/firestore";
 import DashboardHeading from "module/dashboard/DashboardHeading";
@@ -19,7 +17,7 @@ import React, { useEffect, useState } from "react";
 import { POST_PER_PAGE_5, categoryStatus, userRole } from "utils/constants";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-import { debounce, orderBy } from "lodash";
+import { debounce } from "lodash";
 import { useAuth } from "contexts/auth-context";
 import Loading from "components/common/Loading";
 
@@ -29,10 +27,6 @@ const CategoryManage = () => {
   const [filter, setFilter] = useState("");
   const [postPerPage, setPostPerPage] = useState(POST_PER_PAGE_5);
   const [loadingTable, setLoading] = useState(false);
-
-  const handleLoadMoreCategory = async () => {
-    setPostPerPage(postPerPage + POST_PER_PAGE_5);
-  };
 
   useEffect(() => {
     async function fetchData() {
@@ -44,19 +38,22 @@ const CategoryManage = () => {
             where("name", ">=", filter),
             where("name", "<=", filter + "utf8")
           )
-        : query(colRef, where("status", "==", categoryStatus.APPROVED));
+        : query(
+            colRef,
+            where("status", "==", categoryStatus.APPROVED),
+            orderBy("createdAt", "desc")
+          );
 
       setLoading(true);
-      onSnapshot(newRef, (snapShot) => {
-        let result = [];
-
-        snapShot.forEach((doc) => {
-          result.push({
+      onSnapshot(newRef, (snapshot) => {
+        let results = [];
+        snapshot.forEach((doc) => {
+          results.push({
             id: doc.id,
             ...doc.data(),
           });
         });
-        setCategoryList(result);
+        setCategoryList(results);
       });
       setLoading(false);
     }
@@ -85,6 +82,10 @@ const CategoryManage = () => {
   const handleInputFilter = debounce((e) => {
     setFilter(e.target.value);
   }, 500);
+
+  const handleLoadMoreCategory = async () => {
+    setPostPerPage(postPerPage + POST_PER_PAGE_5);
+  };
 
   const { userInfo } = useAuth();
   if (Number(userInfo.role) !== userRole.ADMIN) return null;
@@ -122,8 +123,15 @@ const CategoryManage = () => {
               .map((category) => (
                 <tr key={category.id}>
                   <td>{category.id}</td>
-                  <td>{category.name}</td>
-                  <td>
+                  <td
+                    title={category.name}
+                    className="max-w-xs truncate !text-clip"
+                  >
+                    <h3 title={category.name} className="font-semibold">
+                      {category.name}
+                    </h3>
+                  </td>
+                  <td className="max-w-xs truncate !text-clip">
                     <span className="italic text-gray-400">
                       {category.slug}
                     </span>

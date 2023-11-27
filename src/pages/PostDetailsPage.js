@@ -11,7 +11,6 @@ import PostMeta from "module/post/PostMeta";
 import PostRelated from "module/post/PostRelated";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import Loading from "components/common/Loading";
 import { useAuth } from "contexts/auth-context";
 import ActionsPostDetailsPage from "./ActionsPostDetailsPage";
 import CommentPostDetailsPage from "./CommentPostDetailsPage";

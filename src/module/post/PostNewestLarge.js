@@ -36,11 +36,15 @@ const PostNewestLarge = ({ data }) => {
   const formatDate = new Date(date).toLocaleDateString("vi-VI");
   return (
     <PostNewestLargeStyles>
-      <PostImage
-        url={data?.image}
-        alt={data?.title}
-        to={data?.slug}
-      ></PostImage>
+      {data?.image ? (
+        <PostImage
+          url={data?.image}
+          alt={data?.title}
+          to={data?.slug}
+        ></PostImage>
+      ) : (
+        ""
+      )}
       {data?.category?.name && (
         <PostCategory to={data?.category?.slug}>
           {data?.category?.name}

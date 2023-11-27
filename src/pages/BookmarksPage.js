@@ -13,6 +13,7 @@ import {
   where,
 } from "firebase/firestore";
 import useGetUserIdByEmail from "hooks/useGetUserIdByEmail";
+import { debounce } from "lodash";
 import DashboardHeading from "module/dashboard/DashboardHeading";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -22,6 +23,7 @@ import { POST_PER_PAGE_5, postStatus } from "utils/constants";
 const BookmarksPage = () => {
   const { userInfo } = useAuth();
   const [postList, setPostList] = useState([]);
+  const [filter, setFilter] = useState("");
   const [postPerPage, setPostPerPage] = useState(POST_PER_PAGE_5);
   const navigate = useNavigate();
 
@@ -32,17 +34,31 @@ const BookmarksPage = () => {
   useEffect(() => {
     const q =
       userInfo?.bookmarkPostsId?.length > 0
-        ? query(
-            collection(db, "posts"),
-            where(
-              "uid",
-              "in",
-              userInfo?.bookmarkPostsId?.map(function (item) {
-                return item["id"];
-              })
-            ),
-            where("status", "==", postStatus.APPROVED)
-          )
+        ? filter
+          ? query(
+              collection(db, "posts"),
+              where(
+                "uid",
+                "in",
+                userInfo?.bookmarkPostsId?.map(function (item) {
+                  return item["id"];
+                })
+              ),
+              where("status", "==", postStatus.APPROVED),
+              where("title", ">=", filter),
+              where("title", "<=", filter + "utf8")
+            )
+          : query(
+              collection(db, "posts"),
+              where(
+                "uid",
+                "in",
+                userInfo?.bookmarkPostsId?.map(function (item) {
+                  return item["id"];
+                })
+              ),
+              where("status", "==", postStatus.APPROVED)
+            )
         : null;
 
     if (q) {
@@ -62,7 +78,12 @@ const BookmarksPage = () => {
       } catch (e) {}
     } else {
     }
-  }, [userInfo?.bookmarkPostsId]);
+  }, [filter, userInfo?.bookmarkPostsId]);
+
+  // handle search element by title
+  const handleSearchPost = debounce((e) => {
+    setFilter(e.target.value);
+  }, 250);
 
   // handle delete post in bookmark to uid
   async function handleDeletePost(postId) {
@@ -96,7 +117,16 @@ const BookmarksPage = () => {
         title="All posts"
         desc="Manage all posts"
       ></DashboardHeading>
-
+      <div className="flex justify-end gap-5 mb-10">
+        <div className="w-full max-w-[300px]">
+          <input
+            type="text"
+            className="w-full p-4 border border-gray-300 border-solid rounded-lg"
+            placeholder="Search for post name..."
+            onChange={handleSearchPost}
+          />
+        </div>
+      </div>
       <Table>
         <thead>
           <tr>
@@ -120,8 +150,8 @@ const BookmarksPage = () => {
                 return (
                   <tr key={post.id}>
                     <td title={post?.id}>{post.id?.slice(0, 5) + "..."}</td>
-                    <td className="!pr-[100px]">
-                      <div className="flex items-center gap-x-3">
+                    <td className="!pr-[35px] max-w-xs">
+                      <div className="flex items-center gap-x-3 truncate !text-clip">
                         {post.image ? (
                           <img
                             src={post.image}
@@ -132,7 +162,9 @@ const BookmarksPage = () => {
                           ""
                         )}
                         <div className="flex-1">
-                          <h3 className="font-semibold">{post.title}</h3>
+                          <h3 title={post.title} className="font-semibold">
+                            {post.title}
+                          </h3>
                           <time className="text-sm text-gray-500">
                             Date: {formatDate}
                           </time>

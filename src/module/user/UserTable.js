@@ -1,65 +1,35 @@
 import { ActionDelete, ActionEdit, ActionView } from "components/action";
 import { Button } from "components/button";
 import { db } from "firebase-app/firebase-config";
-import { LabelStatus } from "components/label";
 import { Table } from "components/table";
 import {
   collection,
   deleteDoc,
   doc,
-  getDocs,
-  limit,
   onSnapshot,
   orderBy,
   query,
-  startAfter,
   where,
 } from "firebase/firestore";
 import { debounce } from "lodash";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { userRole, userStatus } from "utils/constants";
+import {
+  POST_PER_PAGE_5,
+  renderLabelStatus,
+  renderRoleLable,
+  userStatus,
+} from "utils/constants";
 import { deleteObject, getStorage, ref } from "firebase/storage";
-import Loading from "components/common/Loading";
-
-const USER_PER_PAGE = 5;
 
 const UserTable = () => {
   const [userList, setUserList] = useState([]);
   const navigate = useNavigate();
   const [filter, setFilter] = useState("");
-  const [lastDoc, setLastDoc] = useState();
-  const [total, setTotal] = useState(0);
-  const [loadingTable, setLoadingTable] = useState(false);
+  const [postPerPage, setPostPerPage] = useState(POST_PER_PAGE_5);
 
-  const handleLoadMoreUser = async () => {
-    const nextRef = query(
-      collection(db, "users"),
-      where("status", "==", userStatus.ACTIVE),
-      orderBy("createdAt", "desc"),
-      startAfter(lastDoc),
-      limit(USER_PER_PAGE)
-    );
-
-    onSnapshot(nextRef, (snapShot) => {
-      let result = [];
-
-      snapShot.forEach((doc) => {
-        result.push({
-          id: doc.id,
-          ...doc.data(),
-        });
-      });
-      setUserList([...userList, ...result]);
-    });
-
-    const documentSnapshots = await getDocs(nextRef);
-    const lastVisible =
-      documentSnapshots.docs[documentSnapshots.docs.length - 1];
-    setLastDoc(lastVisible);
-  };
-
+  // fetch data
   useEffect(() => {
     async function fetchData() {
       const colRef = collection(db, "users");
@@ -73,19 +43,9 @@ const UserTable = () => {
         : query(
             colRef,
             where("status", "==", userStatus.ACTIVE),
-            orderBy("createdAt", "desc"),
-            limit(USER_PER_PAGE)
+            orderBy("createdAt", "desc")
           );
 
-      const documentSnapshots = await getDocs(newRef);
-      const lastVisible =
-        documentSnapshots.docs[documentSnapshots.docs.length - 1];
-
-      onSnapshot(colRef, (snapShot) => {
-        setTotal(snapShot.size);
-      });
-
-      setLoadingTable(true);
       onSnapshot(newRef, (snapShot) => {
         let result = [];
 
@@ -97,39 +57,11 @@ const UserTable = () => {
         });
         setUserList(result);
       });
-
-      setLoadingTable(false);
-      setLastDoc(lastVisible);
     }
     fetchData();
   }, [filter]);
 
-  const renderLabelStatus = (status) => {
-    switch (status) {
-      case userStatus.ACTIVE:
-        return <LabelStatus type="success">Active</LabelStatus>;
-      case userStatus.PENDING:
-        return <LabelStatus type="warning">Pending</LabelStatus>;
-      case userStatus.BAN:
-        return <LabelStatus type="danger">Rejected</LabelStatus>;
-      default:
-        break;
-    }
-  };
-
-  const renderRoleLable = (role) => {
-    switch (role) {
-      case userRole.ADMIN:
-        return "Admin";
-      case userRole.MOD:
-        return "Moderator";
-      case userRole.USER:
-        return "User";
-      default:
-        break;
-    }
-  };
-
+  // handle delete avatar
   const handleDeleteImage = (imageName) => {
     const storage = getStorage();
     const imageRef = ref(storage, "images/" + imageName);
@@ -138,6 +70,7 @@ const UserTable = () => {
       .catch((error) => {});
   };
 
+  // handle detele user
   const handleDeleteUser = async (user) => {
     const colRef = doc(db, "users", user.id);
     const imageRegex = /%2F(\S+)\?/gm.exec(user.avatar);
@@ -165,9 +98,15 @@ const UserTable = () => {
     });
   };
 
+  // handle search
   const handleInputFilter = debounce((e) => {
     setFilter(e.target.value);
   }, 500);
+
+  // handle load more btn
+  const handleLoadMoreCategory = async () => {
+    setPostPerPage(postPerPage + POST_PER_PAGE_5);
+  };
 
   return (
     <div>
@@ -198,8 +137,8 @@ const UserTable = () => {
             userList.map((user) => (
               <tr key={user?.id}>
                 <td title={user?.id}>{user?.id.slice(0, 5) + "..."}</td>
-                <td className="whitespace-nowrap">
-                  <div className="flex items-center gap-x-3">
+                <td className="!pr-[35px] max-w-xs w-96">
+                  <div className="flex items-center gap-x-3 truncate !text-clip">
                     <img
                       src={
                         user?.avatar === "default-avatar.png"
@@ -210,8 +149,15 @@ const UserTable = () => {
                       className="flex-shrink-0 w-10 h-10 object-cover rounded-md"
                     />
                     <div className="flex-1">
-                      <h3>{user?.fullname}</h3>
-                      <time className="text-sm text-gray-300">
+                      <h3 title={user?.fullname} className="font-semibold">
+                        {user?.fullname}
+                      </h3>
+                      <time
+                        title={new Date(
+                          user?.createdAt?.seconds * 1000
+                        ).toLocaleDateString("vi-VI")}
+                        className="text-sm text-gray-300"
+                      >
                         {new Date(
                           user?.createdAt?.seconds * 1000
                         ).toLocaleDateString("vi-VI")}
@@ -242,18 +188,16 @@ const UserTable = () => {
             ))}
         </tbody>
       </Table>
-      {loadingTable ? (
-        <Loading></Loading>
-      ) : userList.length <= 0 ? (
+      {userList.length <= 0 ? (
         <div className="text-center mt-10 text-xxl font-semibold text-primary">
           Data is empty
         </div>
       ) : (
         ""
       )}
-      {total > userList.length && (
-        <div className="mt-10">
-          <Button onClick={handleLoadMoreUser} className="mx-auto">
+      {postPerPage < userList.length && (
+        <div className="mt-10 text-center">
+          <Button className="mx-auto" onClick={handleLoadMoreCategory}>
             Load more
           </Button>
         </div>

@@ -1,20 +1,19 @@
 import { Button } from "components/button";
-import Loading from "components/common/Loading";
 import Heading from "components/layout/Heading";
 import Layout from "components/layout/Layout";
 import { db } from "firebase-app/firebase-config";
 import {
   collection,
-  getDocs,
-  limit,
   onSnapshot,
+  orderBy,
   query,
-  startAfter,
   where,
 } from "firebase/firestore";
+import { debounce } from "lodash";
 import PostItem from "module/post/PostItem";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
+import { POST_PER_PAGE_8, postStatus } from "utils/constants";
 
 const LatestPostsPageStyles = styled.header`
   padding: 20px 0;
@@ -43,57 +42,29 @@ const LatestPostsPageStyles = styled.header`
   }
 `;
 
-const POTS_PER_PAGE = 8;
-
 const LatestPostsPage = () => {
   const [postList, setPostList] = useState([]);
-  const [lastDoc, setLastDoc] = useState();
-  const [total, setTotal] = useState(0);
+  const [filter, setFilter] = useState("");
+  const [postPerPage, setPostPerPage] = useState(POST_PER_PAGE_8);
 
-  const handleLoadMorePost = async () => {
-    const nextRef = query(
-      collection(db, "posts"),
-      where("hot", "==", false),
-      where("status", "==", 1),
-      startAfter(lastDoc),
-      limit(POTS_PER_PAGE)
-    );
-
-    onSnapshot(nextRef, (snapShot) => {
-      let result = [];
-
-      snapShot.forEach((doc) => {
-        result.push({
-          id: doc.id,
-          ...doc.data(),
-        });
-      });
-      setPostList([...postList, ...result]);
-    });
-
-    const documentSnapshots = await getDocs(nextRef);
-    const lastVisible =
-      documentSnapshots.docs[documentSnapshots.docs.length - 1];
-    setLastDoc(lastVisible);
-  };
-
+  // fetch data with hot = true, status = 1
   useEffect(() => {
     async function fetchData() {
-      const colRef = query(
-        collection(db, "posts"),
-        where("hot", "==", false),
-        where("status", "==", 1)
-      );
-      const newRef = query(colRef, limit(POTS_PER_PAGE));
-
-      const documentSnapshots = await getDocs(newRef);
-      const lastVisible =
-        documentSnapshots.docs[documentSnapshots.docs.length - 1];
-
-      onSnapshot(colRef, (snapShot) => {
-        setTotal(snapShot.size);
-      });
-
+      const colRef = collection(db, "posts");
+      const newRef = filter
+        ? query(
+            colRef,
+            where("hot", "==", false),
+            where("status", "==", postStatus.APPROVED),
+            where("title", ">=", filter),
+            where("title", "<=", filter + "utf8")
+          )
+        : query(
+            colRef,
+            where("hot", "==", false),
+            where("status", "==", postStatus.APPROVED),
+            orderBy("createdAt", "desc")
+          );
       onSnapshot(newRef, (snapShot) => {
         let result = [];
 
@@ -105,11 +76,19 @@ const LatestPostsPage = () => {
         });
         setPostList(result);
       });
-
-      setLastDoc(lastVisible);
     }
     fetchData();
-  }, []);
+  }, [filter]);
+
+  // handle search element by title
+  const handleSearchPost = debounce((e) => {
+    setFilter(e.target.value);
+  }, 250);
+
+  // handle load more btm
+  const handleLoadMorePost = async () => {
+    setPostPerPage(postPerPage + POST_PER_PAGE_8);
+  };
 
   return (
     <Layout>
@@ -117,15 +96,24 @@ const LatestPostsPage = () => {
         <div className="container">
           <div className="pt-10"></div>
           <Heading>Latest posts</Heading>
-          {postList.length <= 0 && <Loading></Loading>}
-          <div className="grid-layout grid-layout--primary">
-            {postList.map((item) => (
-              <PostItem key={item.id} data={item}></PostItem>
-            ))}
+          <div className="flex justify-end gap-5 mb-10">
+            <div className="w-full max-w-[300px]">
+              <input
+                type="text"
+                className="w-full p-4 border border-gray-300 border-solid rounded-lg"
+                placeholder="Search for post name..."
+                onChange={handleSearchPost}
+              />
+            </div>
           </div>
-          {total > postList.length && (
-            <div className="mt-10 mb-10">
-              <Button onClick={handleLoadMorePost} className="mx-auto">
+          <div className="grid-layout grid-layout--primary">
+            {postList
+              .map((item) => <PostItem key={item.id} data={item}></PostItem>)
+              .slice(0, postPerPage)}
+          </div>
+          {postPerPage < postList.length && (
+            <div className="mt-10 text-center">
+              <Button className="mx-auto" onClick={handleLoadMorePost}>
                 Load more
               </Button>
             </div>

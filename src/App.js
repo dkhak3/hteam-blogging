@@ -4,6 +4,7 @@ import React, { Suspense } from "react";
 import UnauthorizePage from "pages/UnauthorizePage";
 import RequiredAuthPage from "pages/RequiredAuthPage";
 import { permissions } from "constants/permissions";
+import Loading from "components/common/Loading";
 const CategoryAddNew = React.lazy(() =>
   import("module/category/CategoryAddNew")
 );
@@ -54,7 +55,7 @@ function App() {
   return (
     <div>
       <AuthProvider>
-        <Suspense>
+        <Suspense fallback={<Loading></Loading>}>
           <Routes>
             <Route path="/" element={<HomePage></HomePage>}></Route>
             <Route path="/unauthorize" element={<UnauthorizePage />}></Route>

@@ -1,6 +1,5 @@
 import { ActionDelete, ActionEdit, ActionView } from "components/action";
 import { Button } from "components/button";
-import Loading from "components/common/Loading";
 import { Table } from "components/table";
 import { useAuth } from "contexts/auth-context";
 import { db } from "firebase-app/firebase-config";
@@ -9,15 +8,15 @@ import {
   collection,
   deleteDoc,
   doc,
-  getDocs,
   onSnapshot,
+  orderBy,
   query,
   updateDoc,
   where,
 } from "firebase/firestore";
 import { deleteObject, getStorage, ref } from "firebase/storage";
 import useGetUserIdByEmail from "hooks/useGetUserIdByEmail";
-import { debounce, orderBy } from "lodash";
+import { debounce } from "lodash";
 import DashboardHeading from "module/dashboard/DashboardHeading";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -29,7 +28,6 @@ const PostMyManage = () => {
   const [postList, setPostList] = useState([]);
   const [filter, setFilter] = useState("");
   const [postPerPage, setPostPerPage] = useState(POST_PER_PAGE_5);
-  const [loadingTable, setLoadingTable] = useState(false);
   const navigate = useNavigate();
 
   // hook get user id by email login
@@ -37,6 +35,7 @@ const PostMyManage = () => {
 
   // handle fetch all data with status = appoved
   useEffect(() => {
+    if (!userId) return;
     async function fetchData() {
       const colRef = collection(db, "posts");
       const newRef = filter
@@ -53,7 +52,6 @@ const PostMyManage = () => {
             where("status", "==", postStatus.APPROVED),
             orderBy("createdAt", "desc")
           );
-      setLoadingTable(true);
       onSnapshot(newRef, (snapShot) => {
         let result = [];
 
@@ -65,7 +63,6 @@ const PostMyManage = () => {
         });
         setPostList(result);
       });
-      setLoadingTable(false);
     }
     fetchData();
   }, [filter, userId]);
@@ -156,8 +153,8 @@ const PostMyManage = () => {
                 return (
                   <tr key={post.id}>
                     <td title={post?.id}>{post.id?.slice(0, 5) + "..."}</td>
-                    <td className="!pr-[100px]">
-                      <div className="flex items-center gap-x-3">
+                    <td className="!pr-[35px] max-w-xs">
+                      <div className="flex items-center gap-x-3 truncate !text-clip">
                         {post.image ? (
                           <img
                             src={post.image}
@@ -168,7 +165,9 @@ const PostMyManage = () => {
                           ""
                         )}
                         <div className="flex-1">
-                          <h3 className="font-semibold">{post.title}</h3>
+                          <h3 title={post.title} className="font-semibold">
+                            {post.title}
+                          </h3>
                           <time className="text-sm text-gray-500">
                             Date: {formatDate}
                           </time>
@@ -208,9 +207,7 @@ const PostMyManage = () => {
         </tbody>
       </Table>
 
-      {loadingTable ? (
-        <Loading></Loading>
-      ) : postList.length <= 0 ? (
+      {postList.length <= 0 ? (
         <div className="text-center mt-10 text-xxl font-semibold text-primary">
           Data is empty
         </div>

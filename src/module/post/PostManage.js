@@ -1,6 +1,5 @@
 import { ActionDelete, ActionEdit, ActionView } from "components/action";
 import { Button } from "components/button";
-import Loading from "components/common/Loading";
 import { Table } from "components/table";
 import { useAuth } from "contexts/auth-context";
 import { db } from "firebase-app/firebase-config";
@@ -29,7 +28,6 @@ const PostManage = () => {
   const [postList, setPostList] = useState([]);
   const [filter, setFilter] = useState("");
   const [postPerPage, setPostPerPage] = useState(POST_PER_PAGE_5);
-  const [loadingTable, setLoadingTable] = useState(false);
   const navigate = useNavigate();
 
   // hook get user id by email login
@@ -52,7 +50,6 @@ const PostManage = () => {
             orderBy("createdAt", "desc")
           );
 
-      setLoadingTable(true);
       onSnapshot(newRef, (snapshot) => {
         let results = [];
         snapshot.forEach((doc) => {
@@ -63,7 +60,6 @@ const PostManage = () => {
         });
         setPostList(results);
       });
-      setLoadingTable(false);
     }
     fetchData();
   }, [filter]);
@@ -108,7 +104,7 @@ const PostManage = () => {
     setFilter(e.target.value);
   }, 250);
 
-  // handle load more btm
+  // handle load more btn
   const handleLoadMorePost = async () => {
     setPostPerPage(postPerPage + POST_PER_PAGE_5);
   };
@@ -152,8 +148,8 @@ const PostManage = () => {
                 return (
                   <tr key={post.id}>
                     <td title={post?.id}>{post.id?.slice(0, 5) + "..."}</td>
-                    <td className="!pr-[100px]">
-                      <div className="flex items-center gap-x-3">
+                    <td className="!pr-[35px] max-w-xs">
+                      <div className="flex items-center gap-x-3 truncate !text-clip">
                         {post.image ? (
                           <img
                             src={post.image}
@@ -164,7 +160,9 @@ const PostManage = () => {
                           ""
                         )}
                         <div className="flex-1">
-                          <h3 className="font-semibold">{post.title}</h3>
+                          <h3 title={post.title} className="font-semibold">
+                            {post.title}
+                          </h3>
                           <time className="text-sm text-gray-500">
                             Date: {formatDate}
                           </time>
@@ -203,9 +201,7 @@ const PostManage = () => {
               .slice(0, postPerPage)}
         </tbody>
       </Table>
-      {loadingTable ? (
-        <Loading></Loading>
-      ) : postList.length <= 0 ? (
+      {postList.length <= 0 ? (
         <div className="text-center mt-10 text-xxl font-semibold text-primary">
           Data is empty
         </div>

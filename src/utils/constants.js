@@ -1,7 +1,6 @@
 import { LabelStatus } from "components/label";
 import { db } from "firebase-app/firebase-config";
-import { collection, doc, getDocs, query, where } from "firebase/firestore";
-import { useEffect } from "react";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 export const theme = {
   primary: "#1DC071",
@@ -54,6 +53,32 @@ export const renderPostStatus = (status) => {
     case postStatus.REJECTED:
       return <LabelStatus type="danger">Rejected</LabelStatus>;
 
+    default:
+      break;
+  }
+};
+
+export const renderLabelStatus = (status) => {
+  switch (status) {
+    case userStatus.ACTIVE:
+      return <LabelStatus type="success">Active</LabelStatus>;
+    case userStatus.PENDING:
+      return <LabelStatus type="warning">Pending</LabelStatus>;
+    case userStatus.BAN:
+      return <LabelStatus type="danger">Rejected</LabelStatus>;
+    default:
+      break;
+  }
+};
+
+export const renderRoleLable = (role) => {
+  switch (role) {
+    case userRole.ADMIN:
+      return "Admin";
+    case userRole.MOD:
+      return "Moderator";
+    case userRole.USER:
+      return "User";
     default:
       break;
   }

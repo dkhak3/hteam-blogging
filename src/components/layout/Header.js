@@ -22,7 +22,7 @@ const menuLinks = [
 
 const HeaderStyles = styled.header`
   z-index: 9999;
-  padding: 5px 0;
+  padding: 4px 0;
   background-color: #fff;
   .header-main {
     display: flex;
@@ -36,7 +36,7 @@ const HeaderStyles = styled.header`
   }
   .logo {
     display: block;
-    max-width: 50px;
+    max-width: 40px;
   }
   .menu {
     display: flex;

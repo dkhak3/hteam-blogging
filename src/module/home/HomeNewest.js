@@ -72,7 +72,7 @@ const HomeNewest = () => {
       <div className="container">
         <div className="flex justify-between">
           <Heading>Latest posts</Heading>
-          <Button kind="secondary" onClick={() => navigate("/Latest-posts")}>
+          <Button kind="secondary" onClick={() => navigate("/latest-posts")}>
             Show all
           </Button>
         </div>

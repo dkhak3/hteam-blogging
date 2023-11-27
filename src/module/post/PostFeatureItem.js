@@ -1,10 +1,10 @@
+import { Link } from "react-router-dom";
 import PostCategory from "./PostCategory";
 import PostImage from "./PostImage";
 import PostMeta from "./PostMeta";
 import PostTitle from "./PostTitle";
 import React from "react";
 import styled from "styled-components";
-import PostShortContent from "./PostShortContent";
 
 const PostFeatureItemStyles = styled.div`
   width: 100%;
@@ -63,7 +63,7 @@ const PostFeatureItem = ({ data }) => {
       {data?.image ? (
         <PostImage url={data.image} alt={data.title}></PostImage>
       ) : (
-        ""
+        <Link to={`/${data.slug}`}></Link>
       )}
       <div className="post-overlay"></div>
       <div className="post-content">
@@ -83,7 +83,9 @@ const PostFeatureItem = ({ data }) => {
           {data.title}
         </PostTitle>
 
-        <div className="mt-[16px]">{data?.shortContent}</div>
+        <Link to={`/${data.slug}`}>
+          <div className="mt-[16px]">{data?.shortContent}</div>
+        </Link>
       </div>
     </PostFeatureItemStyles>
   );
