@@ -20,15 +20,6 @@ const schema = yup.object({
     .string()
     .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
     .matches(
-      /^\S+(?:\s+\S+)*$/,
-      "Whitespace at the beginning and end is not allowed"
-    )
-    .test(
-      "noMultipleWhitespace",
-      "Multiple whitespaces are not allowed",
-      (value) => !/\s\s+/.test(value)
-    )
-    .matches(
       /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/,
       "Please enter valid email address"
     )
