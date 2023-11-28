@@ -38,7 +38,9 @@ import {
 
 const phoneRegExp =
   /^(0|84)(2(0[3-9]|1[0-6|8|9]|2[0-2|5-9]|3[2-9]|4[0-9]|5[1|2|4-9]|6[0-3|9]|7[0-7]|8[0-9]|9[0-4|6|7|9])|3[2-9]|5[5|6|8|9]|7[0|6-9]|8[0-6|8|9]|9[0-4|6-9])([0-9]{7})$/;
-const birthdayRegExp = /^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$/;
+const birthdayRegExp =
+  /^(?:0[1-9]|[12]\d|3[01])([\/.-])(?:0[1-9]|1[012])\1(?:19|20)\d\d$/;
+
 const schema = yup.object({
   fullname: yup
     .string()
@@ -53,7 +55,10 @@ const schema = yup.object({
     .max(125, "Please do not enter more than 125 characters"),
   email: yup
     .string()
-    .email("Please enter valid email address")
+    .matches(
+      /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/,
+      "Please enter valid email address"
+    )
     .required("Please enter your email address")
     .max(125, "Your email must not exceed 125 characters"),
   password: yup

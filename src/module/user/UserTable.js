@@ -36,15 +36,10 @@ const UserTable = () => {
       const newRef = filter
         ? query(
             colRef,
-            where("status", "==", userStatus.ACTIVE),
             where("fullname", ">=", filter),
             where("fullname", "<=", filter + "utf8")
           )
-        : query(
-            colRef,
-            where("status", "==", userStatus.ACTIVE),
-            orderBy("createdAt", "desc")
-          );
+        : query(colRef, orderBy("createdAt", "desc"));
 
       onSnapshot(newRef, (snapShot) => {
         let result = [];

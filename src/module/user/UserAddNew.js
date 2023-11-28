@@ -38,7 +38,10 @@ const schema = yup.object({
     .matches(/^[a-z0-9]+(?:[_-][a-z0-9]+)*$/, "Invalid slug format"),
   email: yup
     .string()
-    .email("Please enter valid email address")
+    .matches(
+      /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/,
+      "Please enter valid email address"
+    )
     .required("Please enter your email address")
     .max(125, "Your email must not exceed 125 characters"),
   password: yup
