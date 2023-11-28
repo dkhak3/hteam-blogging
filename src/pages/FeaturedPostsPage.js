@@ -1,16 +1,12 @@
 import { Button } from "components/button";
-import Loading from "components/common/Loading";
 import Heading from "components/layout/Heading";
 import Layout from "components/layout/Layout";
 import { db } from "firebase-app/firebase-config";
 import {
   collection,
-  getDocs,
-  limit,
   onSnapshot,
   orderBy,
   query,
-  startAfter,
   where,
 } from "firebase/firestore";
 import { debounce } from "lodash";
@@ -110,11 +106,18 @@ const FeaturedPostsPage = () => {
               />
             </div>
           </div>
-          <div className="grid-layout grid-layout--primary">
-            {postList
-              .map((item) => <PostItem key={item.id} data={item}></PostItem>)
-              .slice(0, postPerPage)}
-          </div>
+          
+          {postList.length <= 0 ? (
+            <div className="text-center mt-10 text-xxl font-semibold text-primary">
+              Data is empty
+            </div>
+          ) : (
+            <div className="grid-layout grid-layout--primary">
+              {postList
+                .map((item) => <PostItem key={item.id} data={item}></PostItem>)
+                .slice(0, postPerPage)}
+            </div>
+          )}
 
           {postPerPage < postList.length && (
             <div className="mt-10 text-center">
