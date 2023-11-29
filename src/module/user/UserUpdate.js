@@ -53,6 +53,11 @@ const schema = yup.object({
       /^\S+(?:\s+\S+)*$/,
       "Whitespace at the beginning and end is not allowed"
     )
+    .test(
+      "noMultipleWhitespace",
+      "Multiple whitespaces are not allowed",
+      (value) => !/\s\s+/.test(value)
+    )
     .max(255, "Your description must not exceed 255 characters"),
   email: yup
     .string()
@@ -249,14 +254,14 @@ const UserUpdate = () => {
               >
                 Active
               </Radio>
-              <Radio
+              {/* <Radio
                 name="status"
                 control={control}
                 checked={Number(watchStatus) === userStatus.PENDING}
                 value={userStatus.PENDING}
               >
                 Pending
-              </Radio>
+              </Radio> */}
               <Radio
                 name="status"
                 control={control}
@@ -278,14 +283,14 @@ const UserUpdate = () => {
               >
                 Admin
               </Radio>
-              <Radio
+              {/* <Radio
                 name="role"
                 control={control}
                 checked={Number(watchRole) === userRole.MOD}
                 value={userRole.MOD}
               >
                 Moderator
-              </Radio>
+              </Radio> */}
               <Radio
                 name="role"
                 control={control}

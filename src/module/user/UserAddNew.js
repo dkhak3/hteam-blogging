@@ -214,14 +214,14 @@ const UserAddNew = () => {
               >
                 Active
               </Radio>
-              <Radio
+              {/* <Radio
                 name="status"
                 control={control}
                 checked={Number(watchStatus) === userStatus.PENDING}
                 value={userStatus.PENDING}
               >
                 Pending
-              </Radio>
+              </Radio> */}
               <Radio
                 name="status"
                 control={control}
@@ -243,14 +243,14 @@ const UserAddNew = () => {
               >
                 Admin
               </Radio>
-              <Radio
+              {/* <Radio
                 name="role"
                 control={control}
                 checked={Number(watchRole) === userRole.MOD}
                 value={userRole.MOD}
               >
                 Moderator
-              </Radio>
+              </Radio> */}
               <Radio
                 name="role"
                 control={control}
