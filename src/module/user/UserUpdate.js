@@ -49,7 +49,10 @@ const schema = yup.object({
     .matches(/^[a-z0-9]+(?:[_-][a-z0-9]+)*$/, "Invalid slug format"),
   description: yup
     .string()
-    .matches(/^\S*$/, "Whitespace is not allowed")
+    .matches(
+      /^\S+(?:\s+\S+)*$/,
+      "Whitespace at the beginning and end is not allowed"
+    )
     .max(255, "Your description must not exceed 255 characters"),
   email: yup
     .string()
@@ -98,7 +101,14 @@ const UserUpdate = () => {
   }
 
   const { image, setImage, progress, handleSelectImage, handleDeleteImage } =
-    useFirebaseImage(setValue, getValues, imageName, daleteAvatar);
+    useFirebaseImage(
+      setValue,
+      getValues,
+      // imageName,
+      // daleteAvatar,
+      setError,
+      clearErrors
+    );
 
   const handleUpdateUser = async (values) => {
     if (!isValid) return;
@@ -184,6 +194,8 @@ const UserUpdate = () => {
             handleDeleteImage={handleDeleteImage}
             progress={progress}
             image={image}
+            name="image"
+            error={errors?.image?.message}
           ></ImageUpload>
         </div>
         <div className="form-layout">

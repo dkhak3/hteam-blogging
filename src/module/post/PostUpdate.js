@@ -30,7 +30,6 @@ import axios from "axios";
 import { imgbbAPI } from "config/apiConfig";
 import slugify from "slugify";
 import { useAuth } from "contexts/auth-context";
-import Swal from "sweetalert2";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 
@@ -49,11 +48,11 @@ const schema = yup.object().shape({
     .max(100, "Please do not enter more than 100 characters"),
   slug: yup
     .string()
-    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
-    .matches(
-      /^[a-z0-9-]*$/,
-      "Slug must contain only lowercase letters, numbers, and hyphens"
-    ),
+    .transform((value) => (typeof value === "string" ? value.trim() : value)), // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+  // .matches(
+  //   /^[a-z0-9-]*$/,
+  //   "Slug must contain only lowercase letters, numbers, and hyphens"
+  // ),
   // .max(100, "Please do not enter more than 100 characters"),
   shortContent: yup
     .string()
@@ -83,6 +82,7 @@ const schema = yup.object().shape({
 
 const PostUpdate = () => {
   const { userInfo } = useAuth();
+
   const [params] = useSearchParams();
   const postId = params.get("id");
   const navigate = useNavigate();
@@ -113,7 +113,7 @@ const PostUpdate = () => {
   });
 
   const imageUrl = getValues("image");
-  const imageName = getValues("image_name");
+  // const imageName = getValues("image_name");
   // const { image, setImage, progress, handleSelectImage, handleDeleteImage } =
   //   useFirebaseImage(
   //     setValue,
@@ -131,12 +131,7 @@ const PostUpdate = () => {
     handleSelectImage,
     handleDeleteImage,
   } = useFirebaseImage(setValue, getValues, setError, clearErrors);
-  async function deletePostImage() {
-    const colRef = doc(db, "users", postId);
-    await updateDoc(colRef, {
-      avatar: "",
-    });
-  }
+
   useEffect(() => {
     setImage(imageUrl);
   }, [imageUrl, setImage]);
@@ -209,6 +204,10 @@ const PostUpdate = () => {
         ...values,
         category: JSON.parse(values.category),
         image,
+        status:
+          values.user.role === userRole.ADMIN
+            ? postStatus.APPROVED
+            : postStatus.PENDING,
       });
       handleResetUpload();
       toast.success("Update post successfully!");
@@ -230,9 +229,8 @@ const PostUpdate = () => {
       imageUploader: {
         // imgbbAPI
         upload: async (file) => {
-          console.log("upload: ~ file", file);
           const bodyFormData = new FormData();
-          console.log("upload: ~ bodyFormData", bodyFormData);
+
           bodyFormData.append("image", file);
           const response = await axios({
             method: "post",

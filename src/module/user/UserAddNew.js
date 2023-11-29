@@ -6,7 +6,7 @@ import { Input } from "components/input";
 import { Label } from "components/label";
 import { auth, db } from "firebase-app/firebase-config";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { addDoc, collection, serverTimestamp, where } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import useFirebaseImage from "hooks/useFirebaseImage";
 import DashboardHeading from "module/dashboard/DashboardHeading";
 import React from "react";
@@ -61,6 +61,8 @@ const UserAddNew = () => {
     getValues,
     formState: { errors, isValid, isSubmitting },
     reset,
+    setError,
+    clearErrors,
   } = useForm({
     mode: "onChange",
     resolver: yupResolver(schema),
@@ -82,12 +84,13 @@ const UserAddNew = () => {
     progress,
     handleSelectImage,
     handleDeleteImage,
-  } = useFirebaseImage(setValue, getValues);
+  } = useFirebaseImage(setValue, getValues, setError, clearErrors);
 
   const myAvatar = process.env.PUBLIC_URL + "default-avatar.png";
 
   const handleCreateUser = async (values) => {
     if (!isValid) return;
+
     try {
       await createUserWithEmailAndPassword(auth, values.email, values.password);
       await updateProfile(auth.currentUser, {
@@ -155,6 +158,8 @@ const UserAddNew = () => {
             handleDeleteImage={handleDeleteImage}
             progress={progress}
             image={image}
+            name="image"
+            error={errors?.image?.message}
           ></ImageUpload>
         </div>
         <div className="form-layout">

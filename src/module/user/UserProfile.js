@@ -7,11 +7,7 @@ import { Label } from "components/label";
 import { Textarea } from "components/textarea";
 import { useAuth } from "contexts/auth-context";
 import { auth, db } from "firebase-app/firebase-config";
-import {
-  createUserWithEmailAndPassword,
-  signOut,
-  updateProfile,
-} from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import {
   collection,
   doc,
@@ -35,6 +31,7 @@ import {
   checkEmailExistsByUid,
   checkUsernameExistsByUid,
 } from "utils/constants";
+import useGetUserIdByEmail from "hooks/useGetUserIdByEmail";
 
 const phoneRegExp =
   /^(0|84)(2(0[3-9]|1[0-6|8|9]|2[0-2|5-9]|3[2-9]|4[0-9]|5[1|2|4-9]|6[0-3|9]|7[0-7]|8[0-9]|9[0-4|6|7|9])|3[2-9]|5[5|6|8|9]|7[0|6-9]|8[0-6|8|9]|9[0-4|6-9])([0-9]{7})$/;
@@ -95,19 +92,9 @@ const UserProfile = () => {
   });
 
   const navigate = useNavigate();
-  const [userId, setUserId] = useState();
-  // get userid by email
-  useEffect(() => {
-    const colRef = collection(db, "users");
-    if (userInfo?.email) {
-      const queries = query(colRef, where("email", "==", userInfo?.email));
-      onSnapshot(queries, (snapshot) => {
-        snapshot.forEach((doc) => {
-          setUserId(doc.id);
-        });
-      });
-    }
-  }, [userInfo?.email]);
+
+  // hook get user id by email account login
+  const { userId } = useGetUserIdByEmail(userInfo.email || "");
 
   const imageUrl = getValues("avatar");
   const imageRegex = /%2F(\S+)\?/gm.exec(imageUrl);
@@ -119,7 +106,14 @@ const UserProfile = () => {
   }
 
   const { image, setImage, progress, handleSelectImage, handleDeleteImage } =
-    useFirebaseImage(setValue, getValues, imageName, daleteAvatar);
+    useFirebaseImage(
+      setValue,
+      getValues,
+      // imageName,
+      // daleteAvatar,
+      setError,
+      clearErrors
+    );
 
   const handleUpdateProfile = async (values) => {
     if (!isValid) return;
@@ -172,7 +166,7 @@ const UserProfile = () => {
     setImage(imageUrl);
   }, [imageUrl, setImage]);
 
-  // get user by id
+  // fetch data user by user id
   useEffect(() => {
     async function fetchData() {
       if (!userId) return null;
@@ -185,7 +179,7 @@ const UserProfile = () => {
     fetchData();
   }, [userId, reset]);
 
-  if (!userInfo) return <Loading></Loading>;
+  if (!userInfo) return null;
   return (
     <div>
       <DashboardHeading
@@ -200,6 +194,8 @@ const UserProfile = () => {
             handleDeleteImage={handleDeleteImage}
             progress={progress}
             image={image}
+            name="image"
+            error={errors?.image?.message}
           ></ImageUpload>
         </div>
         <div className="form-layout">

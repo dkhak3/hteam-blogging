@@ -93,7 +93,6 @@ const PostAddNew = () => {
     reset,
     setError,
     clearErrors,
-    register,
     formState: { errors, isValid, isSubmitting },
   } = useForm({
     mode: "onChange",
@@ -110,7 +109,6 @@ const PostAddNew = () => {
       content: "",
     },
   });
-  console.log("🚀 ~ file: PostAddNew.js:97 ~ PostAddNew ~ errors:", errors);
 
   const watchStatus = watch("status");
   const watchHot = watch("hot");
