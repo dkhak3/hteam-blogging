@@ -211,7 +211,12 @@ const PostUpdate = () => {
       });
       handleResetUpload();
       toast.success("Update post successfully!");
-      navigate("/manage/posts");
+      // eslint-disable-next-line no-lone-blocks
+      {
+        values.user.role === userRole.ADMIN
+          ? navigate("/manage/posts")
+          : navigate("/manage/my-posts");
+      }
     } catch (error) {}
   };
 
