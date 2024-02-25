@@ -35,9 +35,8 @@ import useGetUserIdByEmail from "hooks/useGetUserIdByEmail";
 
 const phoneRegExp =
   /^(0|84)(2(0[3-9]|1[0-6|8|9]|2[0-2|5-9]|3[2-9]|4[0-9]|5[1|2|4-9]|6[0-3|9]|7[0-7]|8[0-9]|9[0-4|6|7|9])|3[2-9]|5[5|6|8|9]|7[0|6-9]|8[0-6|8|9]|9[0-4|6-9])([0-9]{7})$/;
-const birthdayRegExp =
-  /^(?:0[1-9]|[12]\d|3[01])([\/.-])(?:0[1-9]|1[012])\1(?:19|20)\d\d$/;
-
+// const birthdayRegExp =
+//   /^[0-9]{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])\-[0-9]{4}$/;
 const schema = yup.object({
   fullname: yup
     .string()
@@ -45,8 +44,11 @@ const schema = yup.object({
     .required("Please enter your fullname"),
   username: yup
     .string()
-    .max(125, "Please do not enter more than 125 characters")
-    .required("Please enter your username"),
+    .matches(/^\S*$/, "Whitespace is not allowed")
+    .max(125, "Your username must not exceed 255 characters")
+    .required("Please enter your username")
+    .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    .matches(/^[a-z0-9]+(?:[_-][a-z0-9]+)*$/, "Invalid slug format"),
   description: yup
     .string()
     .max(125, "Please do not enter more than 125 characters"),
@@ -67,10 +69,10 @@ const schema = yup.object({
     message: "Phone not valid",
     excludeEmptyString: true,
   }),
-  birthday: yup.string().matches(birthdayRegExp, {
-    message: "birthday not valid",
-    excludeEmptyString: true,
-  }),
+  // birthday: yup.string().matches(birthdayRegExp, {
+  //   message: "birthday not valid",
+  //   excludeEmptyString: true,
+  // }),
 });
 
 const UserProfile = () => {

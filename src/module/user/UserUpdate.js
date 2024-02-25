@@ -43,22 +43,22 @@ const schema = yup.object({
   username: yup
     .string()
     .matches(/^\S*$/, "Whitespace is not allowed")
-    .max(255, "Your username must not exceed 255 characters")
+    .max(125, "Your username must not exceed 155 characters")
     .required("Please enter your username")
     .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
     .matches(/^[a-z0-9]+(?:[_-][a-z0-9]+)*$/, "Invalid slug format"),
   description: yup
     .string()
-    .matches(
-      /^\S+(?:\s+\S+)*$/,
-      "Whitespace at the beginning and end is not allowed"
-    )
-    .test(
-      "noMultipleWhitespace",
-      "Multiple whitespaces are not allowed",
-      (value) => !/\s\s+/.test(value)
-    )
-    .max(255, "Your description must not exceed 255 characters"),
+    // .matches(
+    //   /^\S+(?:\s+\S+)*$/,
+    //   "Whitespace at the beginning and end is not allowed"
+    // )
+    // .test(
+    //   "noMultipleWhitespace",
+    //   "Multiple whitespaces are not allowed",
+    //   (value) => !/\s\s+/.test(value)
+    // )
+    .max(100, "Your description must not exceed 100 characters"),
   email: yup
     .string()
     .matches(

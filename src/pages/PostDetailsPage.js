@@ -1,4 +1,11 @@
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  onSnapshot,
+  query,
+  where,
+} from "firebase/firestore";
 import { db } from "firebase-app/firebase-config";
 import { useParams } from "react-router-dom";
 import AuthorBox from "components/author/AuthorBox";
@@ -9,11 +16,14 @@ import PostCategory from "module/post/PostCategory";
 import PostImage from "module/post/PostImage";
 import PostMeta from "module/post/PostMeta";
 import PostRelated from "module/post/PostRelated";
-import React, { useEffect, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import styled from "styled-components";
 import { useAuth } from "contexts/auth-context";
 import ActionsPostDetailsPage from "./ActionsPostDetailsPage";
 import CommentPostDetailsPage from "./CommentPostDetailsPage";
+import useCheckPostByUserDoesNotExist from "hooks/useCheckPostByUserDoesNotExist";
+import Header from "components/layout/Header";
+import Footer from "components/layout/Footer";
 
 const PostDetailsPageStyles = styled.div`
   .post {

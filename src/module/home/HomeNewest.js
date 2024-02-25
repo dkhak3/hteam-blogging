@@ -3,12 +3,15 @@ import Heading from "components/layout/Heading";
 import { db } from "firebase-app/firebase-config";
 import {
   collection,
+  doc,
+  getDoc,
   limit,
   onSnapshot,
   orderBy,
   query,
   where,
 } from "firebase/firestore";
+import useCheckPostByUserDoesNotExist from "hooks/useCheckPostByUserDoesNotExist";
 import PostNewestItem from "module/post/PostNewestItem";
 import PostNewestLarge from "module/post/PostNewestLarge";
 import React, { useState, useEffect } from "react";

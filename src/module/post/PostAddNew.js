@@ -61,8 +61,8 @@ const schema = yup.object().shape({
       "Multiple whitespaces are not allowed",
       (value) => !/\s\s+/.test(value)
     )
-    .max(100, "Please do not enter more than 100 characters")
-    .required("Please enter your short content"),
+    .max(100, "Please do not enter more than 100 characters"),
+  // .required("Please enter your short content"),
   content: yup
     .string()
     .transform((value) => (typeof value === "string" ? value.trim() : value)) // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
@@ -249,6 +249,10 @@ const PostAddNew = () => {
     }),
     []
   );
+
+  useEffect(() => {
+    handleSubmit(addPostHandler)();
+  }, []);
 
   return (
     <>

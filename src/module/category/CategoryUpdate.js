@@ -77,7 +77,7 @@ const CategoryUpdate = () => {
         status: Number(values.status),
       });
       toast.success("Update category successfully!");
-      navigate("/manage/category");
+      navigate("/manage/categories");
     } catch (error) {
       toast.error("Update category failed!");
     }

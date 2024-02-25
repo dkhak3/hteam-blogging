@@ -1,4 +1,6 @@
 import { Button } from "components/button";
+import Footer from "components/layout/Footer";
+import Header from "components/layout/Header";
 import Heading from "components/layout/Heading";
 import Layout from "components/layout/Layout";
 import { db } from "firebase-app/firebase-config";
@@ -9,9 +11,10 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import useCheckPostByUserDoesNotExist from "hooks/useCheckPostByUserDoesNotExist";
 import { debounce } from "lodash";
 import PostItem from "module/post/PostItem";
-import React, { useEffect, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import styled from "styled-components";
 import { POST_PER_PAGE_8, postStatus } from "utils/constants";
 

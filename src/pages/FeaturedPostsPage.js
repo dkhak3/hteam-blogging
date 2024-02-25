@@ -4,11 +4,14 @@ import Layout from "components/layout/Layout";
 import { db } from "firebase-app/firebase-config";
 import {
   collection,
+  doc,
+  getDoc,
   onSnapshot,
   orderBy,
   query,
   where,
 } from "firebase/firestore";
+import useCheckPostByUserDoesNotExist from "hooks/useCheckPostByUserDoesNotExist";
 import { debounce } from "lodash";
 import PostItem from "module/post/PostItem";
 import React, { useEffect, useState } from "react";
@@ -90,6 +93,7 @@ const FeaturedPostsPage = () => {
     setPostPerPage(postPerPage + POST_PER_PAGE_8);
   };
 
+
   return (
     <Layout>
       <FeaturedPostsPageStyles>
@@ -106,7 +110,7 @@ const FeaturedPostsPage = () => {
               />
             </div>
           </div>
-          
+
           {postList.length <= 0 ? (
             <div className="text-center mt-10 text-xxl font-semibold text-primary">
               Data is empty

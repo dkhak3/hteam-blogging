@@ -2,6 +2,8 @@ import { db } from "firebase-app/firebase-config";
 import Heading from "components/layout/Heading";
 import {
   collection,
+  doc,
+  getDoc,
   limit,
   onSnapshot,
   orderBy,
@@ -14,6 +16,7 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { Button } from "components/button";
 import { postStatus } from "utils/constants";
+import useCheckPostByUserDoesNotExist from "hooks/useCheckPostByUserDoesNotExist";
 const HomeFeatureStyles = styled.div``;
 
 const HomeFeature = () => {
